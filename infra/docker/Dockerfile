@@ -17,4 +17,4 @@ COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
 # AWS Secrets Manager에서 값을 가져오기 위한 환경 변수 공간 확보
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
