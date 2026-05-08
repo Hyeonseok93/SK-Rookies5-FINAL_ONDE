@@ -26,7 +26,7 @@ resource "aws_s3_bucket_public_access_block" "app" {
 }
 
 # 현재 AWS 계정 ID 조회 (버킷 이름 suffix용)
-data "aws_caller_identity" "current" {}
+# data "aws_caller_identity" "current" {}
 
 # 서버 사이드 암호화 (AES-256)
 resource "aws_s3_bucket_server_side_encryption_configuration" "app" {

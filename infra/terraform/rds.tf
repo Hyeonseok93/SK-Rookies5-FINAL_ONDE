@@ -61,3 +61,13 @@ resource "aws_db_instance" "main" {
     Name = "${var.project_name}-rds"
   }
 }
+
+resource "aws_security_group_rule" "eks_to_redis" {
+  description              = "Allow Redis traffic from EKS nodes"
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id # 기존 rds-sg를 같이 쓰거나 별도 SG 생성 가능
+  source_security_group_id = aws_security_group.eks_nodes.id
+}

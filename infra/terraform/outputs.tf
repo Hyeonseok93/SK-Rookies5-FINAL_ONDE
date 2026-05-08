@@ -49,10 +49,10 @@ output "eks_node_security_group_id" {
   value       = aws_security_group.eks_nodes.id
 }
 
-output "backend_sa_role_arn" {
-  description = "백엔드 ServiceAccount IAM Role ARN (IRSA)"
-  value       = aws_iam_role.backend_sa.arn
-}
+# output "backend_sa_role_arn" {
+#   description = "백엔드 ServiceAccount IAM Role ARN (IRSA)"
+#   value       = aws_iam_role.backend_sa.arn
+# }
 
 # kubeconfig 업데이트 명령어 안내
 output "kubeconfig_update_command" {
@@ -99,12 +99,12 @@ output "rds_database_name" {
 
 output "s3_uploads_bucket_name" {
   description = "업로드 버킷 이름"
-  value       = aws_s3_bucket.uploads.bucket
+  value       = aws_s3_bucket.app.bucket
 }
 
 output "s3_uploads_bucket_arn" {
   description = "업로드 버킷 ARN (IAM 정책에서 참조)"
-  value       = aws_s3_bucket.uploads.arn
+  value       = aws_s3_bucket.app.arn
 }
 
 # output "s3_frontend_static_bucket_name" {
