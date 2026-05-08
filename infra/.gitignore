@@ -1,2 +1,4 @@
 terraform.tfvars
-/terraform/*.md
+terraform/*.md
+terraform/*.lock.hcl
+terraform/.terraform
