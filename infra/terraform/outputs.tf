@@ -107,15 +107,15 @@ output "s3_uploads_bucket_arn" {
   value       = aws_s3_bucket.uploads.arn
 }
 
-output "s3_frontend_static_bucket_name" {
-  description = "프론트엔드 정적 파일 버킷 이름"
-  value       = aws_s3_bucket.frontend_static.bucket
-}
+# output "s3_frontend_static_bucket_name" {
+#   description = "프론트엔드 정적 파일 버킷 이름"
+#   value       = aws_s3_bucket.frontend_static.bucket
+# }
 
-output "s3_frontend_static_bucket_arn" {
-  description = "프론트엔드 정적 파일 버킷 ARN"
-  value       = aws_s3_bucket.frontend_static.arn
-}
+# output "s3_frontend_static_bucket_arn" {
+#   description = "프론트엔드 정적 파일 버킷 ARN"
+#   value       = aws_s3_bucket.frontend_static.arn
+# }
 
 # ── LBC ────────────────────────────────────────────────────────────────────
 
