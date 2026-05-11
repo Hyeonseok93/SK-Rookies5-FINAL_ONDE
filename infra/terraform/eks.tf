@@ -16,6 +16,15 @@ resource "aws_security_group" "eks_nodes" {
     self      = true
   }
 
+  # 22번 포트 허용 
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] 
+    description = "SSH access"
+  }
+
   # ALB에서 노드로의 트래픽 허용 (NodePort 범위: 30000-32767)
   ingress {
     from_port   = 30000
@@ -216,6 +225,11 @@ resource "aws_iam_role_policy" "node_s3" {
   })
 }
 
+# 팀원의 인스턴스를 관리할 블록 (내용은 빈 칸으로 시작해도 됨)
+resource "aws_instance" "team_worker" {
+  # terraform import 실행 후 terraform show 내용을 여기에 복사할 예정입니다.
+}
+
 # ────────────────────────────────────────────────────────────────────────────
 # EKS 관리형 노드 그룹
 # 프라이빗 서브넷에 워커 노드 배치 (보안상 권장)
@@ -246,4 +260,9 @@ resource "aws_eks_node_group" "main" {
     aws_iam_role_policy_attachment.eks_ecr_read_only,
     aws_iam_role_policy_attachment.eks_cni_policy,
   ]
+
+  remote_access {
+    ec2_ssh_key               = aws_key_pair.deployer.key_name
+    source_security_group_ids = [aws_security_group.eks_nodes.id]
+  }
 }
