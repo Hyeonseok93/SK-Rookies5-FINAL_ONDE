@@ -19,7 +19,7 @@ resource "aws_security_group" "rds" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]  # security_groups = [aws_security_group.eks_nodes.id]
     description = "Allow MySQL from Local"
   }
 
@@ -56,7 +56,7 @@ resource "aws_db_instance" "main" {
   
   skip_final_snapshot    = true # 프로젝트 종료 후 삭제 편의를 위함
   multi_az               = false # 비용 절감을 위해 단일 AZ (운영 시 true 권장)
-  publicly_accessible    = true # 외부 접근 차단 (보안 핵심)
+  publicly_accessible    = true # 외부 접근 차단 (보안 핵심) 나중에 false로 수정
 
   tags = {
     Name = "${var.project_name}-rds"
