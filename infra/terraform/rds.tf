@@ -43,7 +43,8 @@ resource "aws_db_instance" "main" {
   max_allocated_storage  = 100 # 스토리지 오토스케일링
   engine                 = "mysql"
   engine_version         = "8.0"
-  instance_class         = var.db_instance_class # variables.tf의 db.t3.micro 사용
+  instance_class         = var.db_instance_class 
+  apply_immediately      = true
   
   db_name                = var.db_name
   username               = var.db_username

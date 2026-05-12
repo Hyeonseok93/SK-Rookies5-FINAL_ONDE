@@ -91,7 +91,7 @@ variable "database_subnet_cidrs" {
 variable "db_instance_class" {
   description = "RDS 인스턴스 타입"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t3.small"
 }
 
 variable "db_name" {
