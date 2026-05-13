@@ -12,6 +12,7 @@ metadata:
     # 헬스 체크 설정 (서비스가 살아있는지 확인)
     alb.ingress.kubernetes.io/success-codes: '200,302'
     alb.ingress.kubernetes.io/healthcheck-path: /api/products
+    alb.ingress.kubernetes.io/healthcheck-port: traffic-port
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
 spec:
   ingressClassName: alb
