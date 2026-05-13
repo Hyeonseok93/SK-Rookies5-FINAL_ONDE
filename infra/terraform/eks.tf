@@ -39,7 +39,7 @@ resource "aws_security_group" "eks_nodes" {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-    cidr_blocks = var.public_subnet_cidrs
+    cidr_blocks = [var.vpc_cidr]
     description = "ALB to backend pod direct"
   }
 
