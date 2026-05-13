@@ -3,11 +3,15 @@ kind: Service
 metadata:
   name: frontend-service
   namespace: mini-project3
+  annotations:
+    # [2] IP 모드 사용 시 서비스 단위에서 헬스 체크 경로를 지정 (프론트엔드용)
+    alb.ingress.kubernetes.io/healthcheck-path: /
 spec:
-  type: NodePort
+  # [3] IP 모드에서는 ClusterIP로도 충분하지만, 관습적으로 NodePort를 유지해도 무방합니다.
+  type: NodePort 
   selector:
-    app: frontend            # frontend-deployment.yaml의 label과 일치해야 함
+    app: frontend
   ports:
-    - port: 80               # 서비스가 노출할 포트
-      targetPort: 80      # 프론트엔드 앱 포트 (이미지 설정에 따라 80 또는 3000)
+    - port: 80
+      targetPort: 80
       protocol: TCP

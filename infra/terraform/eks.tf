@@ -43,6 +43,15 @@ resource "aws_security_group" "eks_nodes" {
     description = "ALB to backend pod direct"
   }
 
+  # 프론트엔드가 80 포트를 사용한다면:
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+    description = "Allow ALB to Frontend Pod direct"
+  }
+
   # EKS 컨트롤 플레인 → 노드 kubelet 통신
   ingress {
     from_port   = 443

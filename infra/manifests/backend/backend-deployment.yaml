@@ -15,21 +15,19 @@ spec:
       labels:
         app: backend
     spec:
-      # [중요] 테라폼에서 설정한 backend 노드 그룹에만 배포되도록 설정
+      # [1] 테라폼에서 설정한 backend 노드 그룹에만 파드가 배치되도록 설정
       nodeSelector:
         role: backend
       containers:
       - name: backend-container
-        # 이전 출력값에서 확인된 ECR 주소 사용
         image: 805400277714.dkr.ecr.ap-northeast-2.amazonaws.com/team01-mini-project3/backend:26358751a40ac0f8262ce2938ad9f4baf221a60f
         ports:
-        - containerPort: 8080
+        - containerPort: 8080 # Spring Boot 기본 포트
         env:
         - name: DB_HOST
           value: "terraform-20260508075842560200000001.c18y4gs8uo61.ap-northeast-2.rds.amazonaws.com"
         - name: REDIS_HOST
-          value: "지수님의-redis-엔드포인트-주소"
-        # 금융 보안을 위한 리소스 제한 설정
+          value: "지수님의- 실제-redis-엔드포인트-주소" # 실제 주소로 교체 필요
         resources:
           requests:
             memory: "256Mi"
@@ -37,16 +35,3 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: backend-service
-spec:
-  selector:
-    app: backend
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: NodePort # ALB Controller를 사용할 것이므로 NodePort로 설정
