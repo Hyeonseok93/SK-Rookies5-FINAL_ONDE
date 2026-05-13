@@ -4,6 +4,7 @@ metadata:
   name: team01-ingress
   namespace: mini-project3
   annotations:
+    alb.ingress.kubernetes.io/load-balancer-name: team01-alb
     # AWS ALB를 사용하기 위한 필수 설정
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
