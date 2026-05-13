@@ -1,5 +1,4 @@
 name: "Terraform Infrastructure CI/CD"
-
 on:
   push:
     branches:
