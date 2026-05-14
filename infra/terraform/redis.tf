@@ -27,8 +27,11 @@ resource "aws_security_group" "redis" {
 # ────────────────────────────────────────────────────────────────────────────
 resource "aws_elasticache_subnet_group" "main" {
   name       = "${var.project_name}-redis-subnet-group"
-  # vpc.tf에 정의된 database 서브넷들의 ID를 리스트로 가져옵니다
-  subnet_ids = aws_subnet.database[*].id 
+  subnet_ids = aws_subnet.redis[*].id
+
+  tags = {
+    Name = "${var.project_name}-redis-subnet-group"
+  }
 }
 
 # ────────────────────────────────────────────────────────────────────────────
