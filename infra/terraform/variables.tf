@@ -83,7 +83,7 @@ variable "nodes_on" {
 # ── RDS ────────────────────────────────────────────────────────────────────
 
 variable "database_subnet_cidrs" {
-  description = "데이터베이스 서브넷 CIDR 목록 (RDS/Redis 배치)"
+  description = "데이터베이스 서브넷 CIDR 목록 (RDS)"
   type        = list(string)
   default     = ["10.0.100.0/24", "10.0.200.0/24"] # 기존 private과 겹치지 않는 대역
 }
@@ -110,4 +110,12 @@ variable "db_password" {
   description = "RDS 마스터 비밀번호 (terraform.tfvars에 직접 입력)"
   type        = string
   sensitive   = true # terraform output 및 로그에 출력되지 않음
+}
+
+# ── REDIS ──────────────────────────────────────────────────────────────────
+
+variable "redis_subnet_cidrs" {
+  description = "Redis 서브넷 CIDR 목록"
+  type        = list(string)
+  default     = ["10.0.300.0/24", "10.0.400.0/24"]
 }

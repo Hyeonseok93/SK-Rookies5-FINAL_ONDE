@@ -85,8 +85,8 @@ resource "aws_route_table_association" "database" {
 resource "aws_subnet" "redis" {
   count             = 2
   vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index + 30) # 30번 대역 사용 추천
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = var.redis_subnet_cidrs[count.index] 
+  availability_zone = var.availability_zones[count.index]
 
   tags = {
     Name = "${var.project_name}-redis-subnet-${count.index + 1}"
