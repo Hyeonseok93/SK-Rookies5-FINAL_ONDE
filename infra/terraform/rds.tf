@@ -19,8 +19,8 @@ resource "aws_security_group" "rds" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = ["sg-0fcfdf6de02bb46f5","sg-057f09b2ce8c30ef5",aws_security_group.eks_nodes.id]
-    description = "Allow MySQL access from Bastion and EKS nodes only"
+    security_groups = ["sg-057f09b2ce8c30ef5",aws_security_group.eks_nodes.id,"sg-0b5a7d2c4ba3cc669"]
+    description = "Allow MySQL access from EKS nodes only"
   }
 
   # 아웃바운드: RDS는 외부 인터넷으로 나갈 이유가 없으므로 VPC 내부로만 제한
@@ -44,7 +44,7 @@ resource "aws_db_instance" "main" {
   engine                 = "mysql"
   engine_version         = "8.0"
   instance_class         = var.db_instance_class 
-  #apply_immediately      = true
+  apply_immediately      = true
   
   db_name                = var.db_name
   username               = var.db_username
