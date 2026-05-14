@@ -148,46 +148,6 @@ locals {
   oidc_issuer = replace(aws_iam_openid_connect_provider.eks.url, "https://", "")
 }
 
-# resource "aws_iam_role" "backend_sa" {
-#   name = "${var.project_name}-backend-sa-role"
-
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [{
-#       Effect = "Allow"
-#       Principal = {
-#         Federated = aws_iam_openid_connect_provider.eks.arn
-#       }
-#       Action = "sts:AssumeRoleWithWebIdentity"
-#       Condition = {
-#         StringLike = {
-#           "${local.oidc_issuer}:sub" = "system:serviceaccount:sample-app:*"
-#           "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
-#         }
-#       }
-#     }]
-#   })
-# }
-
-# resource "aws_iam_role_policy" "backend_s3" {
-#   name = "${var.project_name}-backend-s3-policy"
-#   role = aws_iam_role.backend_sa.id
-
-#   policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [{
-#       Effect = "Allow"
-#       Action = [
-#         "s3:GetObject",
-#         "s3:PutObject",
-#         "s3:DeleteObject",
-#         "s3:ListBucket"
-#       ]
-#       Resource = local.s3_bucket_arns # 실제 운영 환경에서는 특정 버킷 ARN으로 제한 권장
-#     }]
-#   })
-# }
-
 # ────────────────────────────────────────────────────────────────────────────
 # 노드 그룹 IAM 역할
 # AmazonEKSWorkerNodePolicy : 노드가 클러스터에 등록되고 통신하기 위해 필요
