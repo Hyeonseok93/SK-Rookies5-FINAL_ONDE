@@ -4,15 +4,13 @@ metadata:
   name: backend-service
   namespace: mini-project3
   annotations:
-    # [2] IP 모드 사용 시 백엔드 전용 헬스 체크 경로 지정
     alb.ingress.kubernetes.io/healthcheck-path: /api/health
-    # 성공 코드 설정 (필요시)
     alb.ingress.kubernetes.io/success-codes: '200,302,403,405'
-  # [3] IP 모드에서는 NodePort 혹은 ClusterIP 모두 가능합니다. 
-  type: NodePort 
+spec:                  # 이 줄 추가
+  type: NodePort
   selector:
     app: backend
   ports:
-    - port: 80         # 서비스 노출 포트 (Ingress가 찌르는 포트)
-      targetPort: 8080 # 실제 컨테이너 포트
+    - port: 80
+      targetPort: 8080
       protocol: TCP
