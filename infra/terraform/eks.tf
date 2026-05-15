@@ -167,6 +167,23 @@ resource "aws_iam_role" "eks_node" {
     }]
   })
 }
+# SecretsManager 접근 권한
+resource "aws_iam_role_policy" "node_secrets_manager" {
+  name = "${var.project_name}-node-secrets-policy"
+  role = aws_iam_role.eks_node.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ]
+      Resource = "arn:aws:secretsmanager:ap-northeast-2:805400277714:secret:team01-mini-project3/backend-A3n7Uy"
+    }]
+  })
+}
 
 resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
   role       = aws_iam_role.eks_node.name
