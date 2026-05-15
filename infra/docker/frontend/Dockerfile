@@ -14,6 +14,7 @@ RUN npm run build
 FROM nginx:stable-alpine
 
 # 빌드 결과물을 Nginx가 서비스할 폴더로 복사
+COPY docker/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # 기본 80포트 개방

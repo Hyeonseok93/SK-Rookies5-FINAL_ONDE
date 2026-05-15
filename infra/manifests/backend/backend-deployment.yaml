@@ -27,7 +27,7 @@ spec:
         - name: DB_HOST
           value: "terraform-20260508075842560200000001.c18y4gs8uo61.ap-northeast-2.rds.amazonaws.com"
         - name: REDIS_HOST
-          value: "지수님의- 실제-redis-엔드포인트-주소" # 실제 주소로 교체 필요
+          value: "team01-mini-project3-redis.zahxnr.0001.apn2.cache.amazonaws.com:6379"
         - name: TZ
           value: Asia/Seoul  # 타임존을 서울로 설정
         resources:
