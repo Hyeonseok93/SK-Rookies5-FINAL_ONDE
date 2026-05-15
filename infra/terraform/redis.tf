@@ -11,7 +11,7 @@ resource "aws_security_group" "redis" {
     from_port       = 6379
     to_port         = 6379
     protocol        = "tcp"
-    security_groups = ["sg-0ec5c32c8d4e5cfb5"] # 백엔드 워커 노드 sg
+    security_groups = ["sg-0b5a7d2c4ba3cc669"] # 백엔드 워커 노드 sg
   }
 
   egress {
