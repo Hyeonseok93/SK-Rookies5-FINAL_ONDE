@@ -301,8 +301,8 @@ resource "aws_eks_node_group" "backend" {
 
   scaling_config {
     # nodes_on이 false면 개수를 0으로 만들어 인스턴스를 삭제합니다.
-    desired_size = 2
-    min_size     = 2
+    desired_size = var.nodes_on ? 1 : 0
+    min_size     = var.nodes_on ? 1 : 0
     max_size     = 2
   }
 
