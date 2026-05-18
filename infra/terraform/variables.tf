@@ -107,7 +107,7 @@ variable "db_username" {
 }
 
 variable "db_password" {
-  description = "RDS 마스터 비밀번호 (terraform.tfvars에 직접 입력)"
+  description = "RDS 마스터 비밀번호 (GitHub Secrets Manager에 저장)"
   type        = string
   sensitive   = true # terraform output 및 로그에 출력되지 않음
 }

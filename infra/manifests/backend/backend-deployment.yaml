@@ -25,9 +25,20 @@ spec:
         - containerPort: 8080 # Spring Boot 기본 포트
         env:
         - name: DB_HOST
-          value: "terraform-20260508075842560200000001.c18y4gs8uo61.ap-northeast-2.rds.amazonaws.com"
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret    # ExternalSecret이 생성한 K8s Secret
+              key: DB_HOST
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: DB_PASSWORD
         - name: REDIS_HOST
-          value: "team01-mini-project3-redis.zahxnr.0001.apn2.cache.amazonaws.com:6379"
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: REDIS_HOST
         - name: TZ
           value: Asia/Seoul  # 타임존을 서울로 설정
         resources:

@@ -167,6 +167,44 @@ resource "aws_iam_role" "eks_node" {
     }]
   })
 }
+# SecretsManager 접근 권한
+resource "aws_iam_role" "eso_sa" {
+  name = "${var.project_name}-eso-sa-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = aws_iam_openid_connect_provider.eks.arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "${local.oidc_issuer}:sub" = "system:serviceaccount:mini-project3:external-secrets-sa"
+          "${local.oidc_issuer}:aud" = "sts.amazonaws.com"
+        }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "eso_secrets_manager" {
+  name = "${var.project_name}-eso-secrets-policy"
+  role = aws_iam_role.eso_sa.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ]
+      Resource = "arn:aws:secretsmanager:ap-northeast-2:805400277714:secret:team01-mini-project3/backend-A3n7Uy"
+    }]
+  })
+}
 
 resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
   role       = aws_iam_role.eks_node.name
@@ -263,7 +301,7 @@ resource "aws_eks_node_group" "backend" {
 
   scaling_config {
     # nodes_on이 false면 개수를 0으로 만들어 인스턴스를 삭제합니다.
-    desired_size = var.nodes_on ? 1 : 0 
+    desired_size = var.nodes_on ? 1 : 0
     min_size     = var.nodes_on ? 1 : 0
     max_size     = 2
   }
