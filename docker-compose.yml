@@ -2,7 +2,7 @@ services:
   mariadb:
     image: mariadb:11.4
     env_file:
-      - ./backend/.env
+      - ./ONDE-backend/.env
     volumes:
       - mariadb-data:/var/lib/mysql
       - ./DB_Seed:/tmp/DB_Seed:ro
@@ -18,7 +18,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     env_file:
-      - ./backend/.env
+      - ./ONDE-backend/.env
     volumes:
       - ./S3_Mock:/data
     command: server /data --console-address ":9001"
@@ -33,11 +33,11 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: ./ONDE-backend
       args:
         MODULE: api-module
     env_file:
-      - ./backend/.env
+      - ./ONDE-backend/.env
     environment:
       DB_URL: jdbc:mariadb://mariadb:3306/onde
       REDIS_HOST: redis
@@ -60,11 +60,11 @@ services:
 
   admin:
     build:
-      context: ./backend
+      context: ./ONDE-backend
       args:
         MODULE: admin-module
     env_file:
-      - ./backend/.env
+      - ./ONDE-backend/.env
     environment:
       DB_URL: jdbc:mariadb://mariadb:3306/onde
       REDIS_HOST: redis
@@ -91,9 +91,9 @@ services:
     image: node:22-alpine
     working_dir: /app
     env_file:
-      - ./frontend/.env
+      - ./ONDE-frontend/.env
     volumes:
-      - ./frontend:/app
+      - ./ONDE-frontend:/app
       - frontend-node-modules:/app/node_modules
     command: ["sh", "-lc", "npm ci && npm run build && npm run dev -- --host 0.0.0.0 --port 5173"]
     ports:
@@ -113,7 +113,7 @@ services:
   db-seeder:
     image: mariadb:11.4
     env_file:
-      - ./backend/.env
+      - ./ONDE-backend/.env
     volumes:
       - ./DB_Seed:/tmp/DB_Seed:ro
     depends_on:
