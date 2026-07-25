@@ -2,3 +2,7 @@
 S3_Mock/
 onde-local/
 DB_Seed/
+
+# Root env if created for compose interpolation
+.env
+!.env.example
