@@ -1,0 +1,7 @@
+﻿# Local docker runtime / seed bulk (keep on disk, do not push)
+S3_Mock/
+onde-local/
+DB_Seed/*.csv
+DB_Seed/*.xlsx
+DB_Seed/*.xls
+!DB_Seed/load_data.sql

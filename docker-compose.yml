@@ -1,0 +1,186 @@
+services:
+  mariadb:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: onde
+      MARIADB_USER: onde
+      MARIADB_PASSWORD: ondepass
+      MARIADB_ROOT_PASSWORD: rootpass
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./DB_Seed:/tmp/DB_Seed:ro  # DB Seed 폴더를 컨테이너 내부에 자동 마운트
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:RELEASE.2022-05-08T23-50-31Z
+    ports:
+      - "9000:9000"      # S3 API 포트
+      - "9001:9001"      # 웹 관리 콘솔 포트
+    environment:
+      MINIO_ROOT_USER: onde-s3-user
+      MINIO_ROOT_PASSWORD: onde-s3-password
+    volumes:
+      - ./S3_Mock:/data  # 로컬 S3_Mock 폴더를 MinIO 데이터 루트에 매핑
+    command: server /data --console-address ":9001"
+
+  redis:
+    image: redis:7.2-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ./backend
+      args:
+        MODULE: api-module
+    environment:
+      DB_URL: jdbc:mariadb://mariadb:3306/onde
+      DB_USERNAME: onde
+      DB_PASSWORD: ondepass
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      MAIL_USERNAME: test@example.com
+      MAIL_PASSWORD: test-password
+      PORTONE_IMP_KEY: test_key
+      PORTONE_IMP_SECRET: test_secret
+      AWS_S3_BUCKET: onde-local
+      AWS_CLOUDFRONT_DOMAIN: http://localhost:9000/onde-local
+      AWS_S3_ENDPOINT: http://minio:9000
+      AWS_REGION: ap-northeast-2
+      AES_SECRET_KEY: "0123456789abcdef0123456789abcdef"
+      NTS_SERVICE_KEY: test
+      GOOGLE_CLIENT_ID: test-google-client
+      GOOGLE_CLIENT_SECRET: test-google-secret
+      KAKAO_CLIENT_ID: test-kakao-client
+      KAKAO_CLIENT_SECRET: test-kakao-secret
+    ports:
+      - "8080:8080"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8080'"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 30s
+
+  admin:
+    build:
+      context: ./backend
+      args:
+        MODULE: admin-module
+    environment:
+      DB_URL: jdbc:mariadb://mariadb:3306/onde
+      DB_USERNAME: onde
+      DB_PASSWORD: ondepass
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      MAIL_USERNAME: test@example.com
+      MAIL_PASSWORD: test-password
+      PORTONE_IMP_KEY: test_key
+      PORTONE_IMP_SECRET: test_secret
+      AWS_S3_BUCKET: onde-local
+      AWS_CLOUDFRONT_DOMAIN: http://localhost:9000/onde-local
+      AWS_S3_ENDPOINT: http://minio:9000
+      AWS_REGION: ap-northeast-2
+      AES_SECRET_KEY: "0123456789abcdef0123456789abcdef"
+      NTS_SERVICE_KEY: test
+      GOOGLE_CLIENT_ID: test-google-client
+      GOOGLE_CLIENT_SECRET: test-google-secret
+      KAKAO_CLIENT_ID: test-kakao-client
+      KAKAO_CLIENT_SECRET: test-kakao-secret
+      HEALTH_CHECK_ALLOWED_IP: "0.0.0.0/0"
+    ports:
+      - "8081:8081"
+    depends_on:
+      api:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8081'"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 30s
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    environment:
+      VITE_USER_API_BASE: http://localhost:8080
+      VITE_ADMIN_API_BASE: http://localhost:8081
+      VITE_PORTONE_IMP_CODE: imp00000000
+      VITE_PORTONE_PG: html5_inicis.INIpayTest
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    command: ["sh", "-lc", "npm ci && npm run build && npm run dev -- --host 0.0.0.0 --port 5173"]
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173/ | grep -q '<div id=\"root\"'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 60s
+
+  # smoke:
+  #   image: python:3.12-alpine
+  #   profiles: ["test"]
+  #   environment:
+  #     API_BASE: http://api:8080
+  #     ADMIN_BASE: http://admin:8081
+  #     FE_BASE: http://frontend:5173
+  #   volumes:
+  #     - ./smoke:/smoke:ro
+  #   command: ["python", "/smoke/smoke.py"]
+  #   depends_on:
+  #     api:
+  #       condition: service_healthy
+  #     admin:
+  #       condition: service_healthy
+  #     frontend:
+  #       condition: service_healthy
+
+  db-seeder:
+    image: mariadb:11.4
+    volumes:
+      - ./DB_Seed:/tmp/DB_Seed:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Checking database schema readiness...' &&
+        mariadb -hmariadb -uroot -prootpass onde < /tmp/DB_Seed/load_data.sql &&
+        echo 'Seed data loaded successfully!'
+      "
+
+volumes:
+  mariadb-data:
+  frontend-node-modules:
+
