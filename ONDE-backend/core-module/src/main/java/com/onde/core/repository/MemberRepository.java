@@ -2,10 +2,8 @@ package com.onde.core.repository;
 
 import com.onde.core.entity.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
-@Repository
 public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
     
     // 이메일로 회원 정보 단건 조회 (로그인 시 사용)
