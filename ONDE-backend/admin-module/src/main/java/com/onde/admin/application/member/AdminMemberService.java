@@ -9,6 +9,8 @@ import com.onde.core.entity.member.Member;
 import com.onde.core.entity.member.MemberRole;
 import com.onde.core.entity.member.MemberStatus;
 import com.onde.core.entity.notification.FcmToken;
+import com.onde.core.exception.BusinessException;
+import com.onde.core.exception.ErrorCode;
 import com.onde.core.repository.FcmTokenRepository;
 import com.onde.core.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -65,8 +67,14 @@ public class AdminMemberService {
                         (reason != null && !reason.isBlank() ? " 사유: " + reason : ""));
     }
 
+    @Transactional(readOnly = true)
+    public Member requireMember(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
     @Transactional
-    public MemberRole updateMemberRole(Long targetMemberId, Long currentAdminId, MemberRole newRole) {
+    public Member updateMemberRole(Long targetMemberId, Long currentAdminId, MemberRole newRole) {
         // 1. 자기 자신 권한 변경 방지 로직
         if (targetMemberId.equals(currentAdminId)) {
             throw new IllegalArgumentException("본인의 권한은 변경할 수 없습니다.");
@@ -79,11 +87,11 @@ public class AdminMemberService {
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
                 
         member.updateRole(newRole);
-        return newRole;
+        return member;
     }
 
     @Transactional
-    public MemberStatus updateMemberStatus(Long memberId, MemberStatus newStatus) {
+    public Member updateMemberStatus(Long memberId, MemberStatus newStatus) {
         if (newStatus == null) {
             throw new IllegalArgumentException("변경할 회원 상태가 필요합니다.");
         }
@@ -92,7 +100,7 @@ public class AdminMemberService {
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
         member.updateStatus(newStatus);
-        return newStatus;
+        return member;
     }
 
     private void sendSinglePush(Long memberId, String title, String body) {

@@ -23,4 +23,7 @@ public class PaymentPrepareResponse {
 
     /** 예약 식별자 */
     private Long reservationId;
+
+    /** 서버 발급 지갑 거래 ID (validate 시 impUid로 전달) */
+    private String walletTxId;
 }

@@ -178,7 +178,11 @@ export const book_car_api = async (
     endDate: payload.endDate,
     totalPrice: payload.totalPrice,
   });
-  const res = unwrapApi<{ reservationId: number; status: string; message?: string }>(raw);
+  const res = unwrapApi<{ reservationId: number; status: string; message?: string; totalPrice?: number }>(raw);
+  const serverTotal =
+    res.data.totalPrice != null && !Number.isNaN(Number(res.data.totalPrice))
+      ? Number(res.data.totalPrice)
+      : undefined;
   return {
     success: res.success,
     message: res.message,
@@ -186,7 +190,8 @@ export const book_car_api = async (
       reservationId: res.data.reservationId,
       status: String(res.data.status),
       message: res.data.message ?? res.message,
-      totalPrice: payload.totalPrice,
+      // 서버 totalPrice 우선 — 없을 때만 클라이언트 견적 fallback
+      totalPrice: serverTotal ?? payload.totalPrice,
     },
   };
 };

@@ -12,7 +12,7 @@ import { DAYS_OF_WEEK } from '@/constants/shared';
 import { extractApiErrorMessage } from '@/utils/apiResponse';
 
 export const SellerStatPanel: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const [isRequesting, setIsRequesting] = useState(false);
   const [totalSales, setTotalSales] = useState(0);
   const [completedBookings, setCompletedBookings] = useState(0);

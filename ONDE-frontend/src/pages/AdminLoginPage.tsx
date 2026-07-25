@@ -10,7 +10,8 @@ export const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { isLoading, handleAdminLogin } = useAuthForm();
-  const { isLoggedIn, memberRole } = useTravelStore();
+  const isLoggedIn = useTravelStore((s) => s.isLoggedIn);
+  const memberRole = useTravelStore((s) => s.memberRole);
   const navigate = useNavigate();
 
   // If already logged in as admin, redirect to admin main page

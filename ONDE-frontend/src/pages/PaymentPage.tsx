@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { prepare_payment_api, validate_payment_api } from '@/api/paymentApi';
-import { confirm_flight_payment_api } from '@/api/flightApi';
 import { MileageUsagePanel } from '@/components/common/MileageUsagePanel';
 import { useTravelStore } from '@/store/useTravelStore';
 import type { PaymentCheckoutState, PaymentStep } from '@/types/payment';
@@ -29,7 +28,9 @@ function resolvePaymentToastType(message: string): 'warning' | 'info' {
 export const PaymentPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { mileage: userMileage, walletBalance, addToast } = useTravelStore();
+  const userMileage = useTravelStore((s) => s.mileage);
+  const walletBalance = useTravelStore((s) => s.walletBalance);
+  const addToast = useTravelStore((s) => s.addToast);
 
   const checkout = location.state as PaymentCheckoutState | null;
 
@@ -70,45 +71,36 @@ export const PaymentPage: React.FC = () => {
         reservationId: order.reservationId,
         reservationType: order.reservationType,
         usedMileage,
-        totalAmount,
       });
 
       if (!prepareRes.success || !prepareRes.data) {
         throw new Error(prepareRes.message || '결제 사전 검증에 실패했습니다.');
       }
 
-      const { merchantUid, pgAmount: serverPgAmount } = prepareRes.data;
+      const { merchantUid, pgAmount: serverPgAmount, walletTxId, impUid: prepareImpUid } =
+        prepareRes.data;
 
       // ONDE Wallet 결제 처리 (내부 지갑 결제)
       if (walletBalance < serverPgAmount) {
         throw new Error('지갑 잔액이 부족합니다. 마이페이지에서 가상 화폐를 충전해주세요.');
       }
 
-      const mockImpUid = `wallet_tx_${Date.now()}`;
-      const walletPaymentRes = {
-        success: true,
-        imp_uid: mockImpUid,
-        merchant_uid: merchantUid,
-        paid_amount: serverPgAmount,
-      };
+      const impUid = walletTxId || prepareImpUid;
+      if (!impUid) {
+        throw new Error('결제 거래 ID를 받지 못했습니다. 다시 시도해 주세요.');
+      }
 
       const validateRes = await validate_payment_api({
-        impUid: walletPaymentRes.imp_uid,
-        merchantUid: walletPaymentRes.merchant_uid,
-        pgAmount: walletPaymentRes.paid_amount,
+        impUid,
+        merchantUid,
+        pgAmount: serverPgAmount,
       });
 
       if (!validateRes.success || !validateRes.data) {
         throw new Error(validateRes.message || '결제 사후 검증에 실패했습니다.');
       }
 
-      if (order.reservationType === 'FLIGHT' && order.flightBookingCode) {
-        await confirm_flight_payment_api(
-          order.flightBookingCode,
-          walletPaymentRes.imp_uid,
-          walletPaymentRes.paid_amount ?? serverPgAmount
-        );
-      }
+      // FLIGHT 예약 확정은 백엔드 PaymentService.validate → confirmReservation에서 처리
 
       setValidatedPaymentId(validateRes.data.paymentId);
       setStep('success');

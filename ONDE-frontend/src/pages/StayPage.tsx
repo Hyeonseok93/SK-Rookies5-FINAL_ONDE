@@ -15,7 +15,7 @@ const defaultSearch = (): StaySearchParams => ({
 });
 
 export const StayPage: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const [searchParams, setSearchParams] = useState<StaySearchParams | null>(null);
   const [stays, setStays] = useState<StayDto[]>([]);
   const [loading, setLoading] = useState(false);

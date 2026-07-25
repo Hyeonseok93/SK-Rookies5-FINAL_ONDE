@@ -255,6 +255,19 @@ public class MemberMyPageService {
                 .build();
     }
 
+    /**
+     * 리포트 등에서 이메일 표시용. 조회 실패 시 defaultValue 반환.
+     */
+    public String findEmailByIdOrDefault(Long memberId, String defaultValue) {
+        try {
+            return memberRepository.findById(memberId)
+                    .map(member -> member.getEmail() != null ? member.getEmail() : defaultValue)
+                    .orElse(defaultValue);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
     @Transactional
     public void cancelFlightBooking(Long userId, Long bookingId) {
         FlightBooking booking = flightBookingRepository.findById(bookingId)

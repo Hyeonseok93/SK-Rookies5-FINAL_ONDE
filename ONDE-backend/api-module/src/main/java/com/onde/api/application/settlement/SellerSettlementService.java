@@ -4,10 +4,14 @@ import com.onde.api.application.settlement.dto.SellerAccountRequest;
 import com.onde.api.application.settlement.dto.SellerAccountResponse;
 import com.onde.core.entity.member.Member;
 import com.onde.core.entity.settlement.SellerAccount;
+import com.onde.core.entity.settlement.Settlement;
 import com.onde.core.repository.MemberRepository;
 import com.onde.core.repository.SellerAccountRepository;
+import com.onde.core.repository.SettlementRepository;
 import com.onde.core.util.AesUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,8 +21,25 @@ public class SellerSettlementService {
 
     private final MemberRepository memberRepository;
     private final SellerAccountRepository sellerAccountRepository;
+    private final SettlementRepository settlementRepository;
     private final NtsBusinessVerificationService ntsService;
     private final AesUtil aesUtil;
+
+    @Transactional(readOnly = true)
+    public Page<Settlement> getMySettlements(Long sellerId, Pageable pageable) {
+        return settlementRepository.findBySellerId(sellerId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Settlement requireOwnedSettlement(Long settlementId, Long sellerId) {
+        Settlement settlement = settlementRepository.findById(settlementId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 정산 건이 존재하지 않습니다."));
+
+        if (!settlement.getSellerId().equals(sellerId)) {
+            throw new IllegalArgumentException("본인의 정산 내역만 조회할 수 있습니다.");
+        }
+        return settlement;
+    }
 
     @Transactional
     public void registerAccount(String email, SellerAccountRequest request) {

@@ -9,6 +9,7 @@ import com.onde.core.repository.MemberRepository;
 import com.onde.core.repository.PaymentRepository;
 import com.onde.core.repository.SellerAccountRepository;
 import com.onde.core.repository.SettlementRepository;
+import com.onde.core.util.AesUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -43,6 +44,9 @@ class SettlementServiceAccountTest {
     @Mock
     private NtsBusinessVerificationService ntsBusinessVerificationService;
 
+    @Mock
+    private AesUtil aesUtil;
+
     @InjectMocks
     private SettlementService settlementService;
 
@@ -53,6 +57,7 @@ class SettlementServiceAccountTest {
         when(sellerAccountRepository.findByMemberId(41L)).thenReturn(Optional.empty());
         when(ntsBusinessVerificationService.verifyBusiness("1234567890", "홍길동", "20200101"))
                 .thenReturn(NtsBusinessVerificationService.BusinessVerificationResult.valid("확인되었습니다."));
+        when(aesUtil.encrypt("123456789012")).thenReturn("ENC(123456789012)");
         when(sellerAccountRepository.save(any(SellerAccount.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         SellerAccount saved = settlementService.registerOrUpdateAccount(41L, request("123-45-67890", "홍길동", "2020-01-01"));
@@ -64,7 +69,8 @@ class SettlementServiceAccountTest {
         assertEquals("1234567890", saved.getBusinessNumber());
         assertEquals("홍길동", saved.getRepresentativeName());
         assertEquals("20200101", saved.getOpenedAt());
-        assertEquals("123456789012", saved.getAccountNumber());
+        assertEquals("ENC(123456789012)", saved.getAccountNumber());
+        verify(aesUtil).encrypt("123456789012");
     }
 
     @Test

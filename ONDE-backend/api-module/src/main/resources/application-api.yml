@@ -49,6 +49,10 @@ onde:
     cookie:
       secure: true
       same-site: None
+  lock:
+    allow-fallback: false
+  s3:
+    allow-mock-fallback: false
   security:
     login:
       max-failed-attempts: 5
@@ -67,6 +71,10 @@ spring:
   config:
     activate:
       on-profile: local | dev
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 
 onde:
   cors:
@@ -75,6 +83,10 @@ onde:
     cookie:
       secure: false
       same-site: Lax
+  lock:
+    allow-fallback: true
+  s3:
+    allow-mock-fallback: true
 
 app:
   frontend-url: http://localhost:5173

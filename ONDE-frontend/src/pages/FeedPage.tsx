@@ -12,7 +12,9 @@ import { FeedDetailModal } from '@/components/feed/FeedDetailModal';
 import { FeedWriteModal } from '@/components/feed/FeedWriteModal';
 
 export const FeedPage: React.FC = () => {
-  const { addToast, isLoggedIn, openAuthModal } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
+  const isLoggedIn = useTravelStore((s) => s.isLoggedIn);
+  const openAuthModal = useTravelStore((s) => s.openAuthModal);
 
   const [feeds, setFeeds] = useState<FeedItem[]>([]);
   const [selectedTag, setSelectedTag] = useState<'ALL' | 'STAY' | 'FOOD' | 'PHOTO' | 'TIP'>('ALL');

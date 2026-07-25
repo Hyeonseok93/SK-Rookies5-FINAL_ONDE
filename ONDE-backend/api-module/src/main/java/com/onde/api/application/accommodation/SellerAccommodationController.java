@@ -8,8 +8,7 @@ import com.onde.api.application.accommodation.dto.SellerAccommodationRegisterReq
 import com.onde.core.validation.MultipartInputValidator;
 import org.springframework.validation.annotation.Validated;
 import com.onde.api.application.accommodation.dto.SellerAccommodationRegisterResponse;
-import com.onde.api.config.MockS3Uploader;
-import com.onde.core.entity.accommodation.Accommodation;
+import com.onde.api.config.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,8 +34,7 @@ import jakarta.validation.Valid;
 public class SellerAccommodationController {
     private final SellerAccommodationService sellerAccommodationService;
     private final SellerPropertyOwnershipService sellerPropertyOwnershipService;
-    private final com.onde.core.repository.AccommodationRepository accommodationRepository;
-    private final MockS3Uploader s3Uploader;
+    private final S3Uploader s3Uploader;
 
     // 판매자 등록 숙소 신규 등록 API (주소 규격 보정 포함)
 
@@ -45,7 +43,7 @@ public class SellerAccommodationController {
             @Valid @RequestBody SellerAccommodationRegisterRequest request,
             @LoginMember Long sellerId) {
         Long id = sellerAccommodationService.registerAccommodation(sellerId, request);
-        SellerAccommodationRegisterResponse response = buildRegisterResponse(id);
+        SellerAccommodationRegisterResponse response = sellerAccommodationService.toRegisterResponse(id);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "숙소 등록 신청 완료. 관리자 승인 후 노출됩니다."));
@@ -86,21 +84,10 @@ public class SellerAccommodationController {
         }
 
         Long id = sellerAccommodationService.registerAccommodation(sellerId, request);
-        SellerAccommodationRegisterResponse response = buildRegisterResponse(id);
+        SellerAccommodationRegisterResponse response = sellerAccommodationService.toRegisterResponse(id);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "숙소 등록 신청 완료. 관리자 승인 후 노출됩니다."));
-    }
-
-    private SellerAccommodationRegisterResponse buildRegisterResponse(Long id) {
-        Accommodation accommodation = accommodationRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("숙소 등록 정보를 찾을 수 없습니다."));
-        return SellerAccommodationRegisterResponse.builder()
-                .accommodationId(accommodation.getId())
-                .name(accommodation.getName())
-                .thumbnailUrl(accommodation.getThumbnailUrl())
-                .approvalStatus(accommodation.getApprovalStatus())
-                .build();
     }
 
     // 판매자 등록 숙소 목록 조회 API

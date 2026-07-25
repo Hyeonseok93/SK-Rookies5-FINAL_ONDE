@@ -20,7 +20,9 @@ interface MainLayoutProps {
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { isLoggedIn, memberRole, addToast } = useTravelStore();
+  const isLoggedIn = useTravelStore((s) => s.isLoggedIn);
+  const memberRole = useTravelStore((s) => s.memberRole);
+  const addToast = useTravelStore((s) => s.addToast);
 
   useEffect(() => {
     if (isLoggedIn) {

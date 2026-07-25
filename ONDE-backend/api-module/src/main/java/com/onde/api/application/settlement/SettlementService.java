@@ -13,6 +13,7 @@ import com.onde.core.repository.MemberRepository;
 import com.onde.core.repository.PaymentRepository;
 import com.onde.core.repository.SellerAccountRepository;
 import com.onde.core.repository.SettlementRepository;
+import com.onde.core.util.AesUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class SettlementService {
     private final SellerAccountRepository sellerAccountRepository;
     private final MemberRepository memberRepository;
     private final NtsBusinessVerificationService ntsBusinessVerificationService;
+    private final AesUtil aesUtil;
 
     /**
      * 특정 일자의 전체 결제 완료(PAID) 데이터를 기반으로 판매자별 정산 대기(PENDING) 레코드를 생성합니다.
@@ -255,7 +257,7 @@ public class SettlementService {
     }
 
     /**
-     * 테스트용 정산 계좌 등록/수정 비즈니스 로직입니다.
+     * 셀러 정산 계좌 등록/수정. 계좌번호는 AES 암호화 저장합니다.
      */
     @Transactional
     public SellerAccount registerOrUpdateAccount(Long sellerId, com.onde.api.application.settlement.dto.SellerAccountRequest req) {
@@ -282,24 +284,25 @@ public class SettlementService {
         SellerAccount account = sellerAccountRepository.findByMemberId(sellerId)
                 .orElse(SellerAccount.builder().member(seller).build());
 
-        if (accountNumber.isBlank()) {
-            if (account.getAccountNumber() == null || account.getAccountNumber().isBlank()) {
-                throw new ValidationException(ErrorCode.INVALID_INPUT_VALUE);
-            }
-            accountNumber = account.getAccountNumber();
-        }
-
         NtsBusinessVerificationService.BusinessVerificationResult verification =
                 ntsBusinessVerificationService.verifyBusiness(businessNumber, representativeName, openedAt);
         if (!verification.verified()) {
             throw new com.onde.core.exception.BusinessException(ErrorCode.INVALID_INPUT_VALUE, verification.message());
         }
 
+        if (accountNumber.isBlank()) {
+            if (account.getAccountNumber() == null || account.getAccountNumber().isBlank()) {
+                throw new ValidationException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+            // 기존 암호화 값 유지
+        } else {
+            account.setAccountNumber(aesUtil.encrypt(accountNumber));
+        }
+
         account.setBankName(bankName);
         account.setBusinessName(businessName);
         account.setContactPhone(contactPhone);
         account.setBusinessAddress(businessAddress);
-        account.setAccountNumber(accountNumber); // 실제 암호화 처리는 다른 작업자 몫이므로 테스트용으로 그대로 담음
         account.setAccountHolder(accountHolder);
         account.setBusinessNumber(businessNumber);
         account.setRepresentativeName(representativeName);
@@ -309,7 +312,7 @@ public class SettlementService {
     }
 
     /**
-     * 테스트용 정산 계좌 조회 비즈니스 로직입니다.
+     * 셀러 정산 계좌 조회.
      */
     @Transactional(readOnly = true)
     public Optional<SellerAccount> getAccount(Long sellerId) {
@@ -317,9 +320,22 @@ public class SettlementService {
     }
 
     /**
-     * 계좌번호 마스킹 유틸리티 (예: 123-456-789012 -> 123-***-***012)
+     * 계좌번호 마스킹 유틸리티. 저장값이 암호문이면 복호화 후 마스킹합니다.
      */
     public String maskAccountNumber(String accountNumber) {
+        String plain = accountNumber;
+        if (accountNumber != null && !accountNumber.isBlank()) {
+            try {
+                plain = aesUtil.decrypt(accountNumber);
+            } catch (Exception ignored) {
+                // 레거시 평문 값
+                plain = accountNumber;
+            }
+        }
+        return maskPlainAccountNumber(plain);
+    }
+
+    private String maskPlainAccountNumber(String accountNumber) {
         if (accountNumber == null || accountNumber.length() < 8) {
             return accountNumber;
         }

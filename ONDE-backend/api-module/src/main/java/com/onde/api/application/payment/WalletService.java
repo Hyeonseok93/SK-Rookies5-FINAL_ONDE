@@ -70,14 +70,14 @@ public class WalletService {
     }
 
     private UserWallet getOrCreateWallet(Long userId) {
-        return userWalletRepository.findByMemberId(userId).orElseGet(() -> {
+        return userWalletRepository.findByMemberIdForUpdate(userId).orElseGet(() -> {
             Member member = memberRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
             UserWallet newWallet = UserWallet.builder()
                     .member(member)
                     .balance(BigDecimal.ZERO)
                     .build();
-            return userWalletRepository.save(newWallet);
+            return userWalletRepository.saveAndFlush(newWallet);
         });
     }
 

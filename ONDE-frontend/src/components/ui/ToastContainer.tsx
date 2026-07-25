@@ -2,7 +2,8 @@ import React from 'react';
 import { useTravelStore } from '@/store/useTravelStore';
 
 export const ToastContainer: React.FC = () => {
-  const { toastStack, removeToast } = useTravelStore();
+  const toastStack = useTravelStore((s) => s.toastStack);
+  const removeToast = useTravelStore((s) => s.removeToast);
 
   const getToastIcon = (type: string) => {
     switch (type) {

@@ -3,8 +3,11 @@ package com.onde.core.repository;
 import com.onde.core.entity.payment.Payment;
 import com.onde.core.entity.payment.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,7 +27,18 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * @return 조회된 결제 정보 (존재할 경우)
      */
     Optional<Payment> findByMerchantUid(String merchantUid);
-    
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Payment p where p.merchantUid = :merchantUid")
+    Optional<Payment> findByMerchantUidForUpdate(@Param("merchantUid") String merchantUid);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Payment p where p.id = :id")
+    Optional<Payment> findByIdForUpdate(@Param("id") Long id);
+
+    boolean existsByReservationIdAndReservationTypeAndStatus(
+            Long reservationId, String reservationType, PaymentStatus status);
+
     /**
      * 예약 식별자(reservationId)로 결제 내역을 조회합니다.
      */

@@ -44,7 +44,8 @@ interface AdminHQPanelProps {
 // ── Component ──────────────────────────────────────────────────────────────
 
 export const AdminHQPanel: React.FC<AdminHQPanelProps> = ({ defaultTab = 'approval' }) => {
-  const { addToast, memberRole } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
+  const memberRole = useTravelStore((s) => s.memberRole);
   const canModerateProducts = canApproveProducts(memberRole);
   const canExportCsv = canExportBookingCsv(memberRole);
 

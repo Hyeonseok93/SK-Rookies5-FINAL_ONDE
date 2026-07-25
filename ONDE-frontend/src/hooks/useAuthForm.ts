@@ -13,7 +13,11 @@ const LOGIN_CREDENTIALS_INVALID_MESSAGE = '이메일 또는 비밀번호가 올�
 
 export const useAuthForm = () => {
   const navigate = useNavigate();
-  const { login, signupSuccess, closeAuthModal, openAuthModal, addToast } = useTravelStore();
+  const login = useTravelStore((s) => s.login);
+  const signupSuccess = useTravelStore((s) => s.signupSuccess);
+  const closeAuthModal = useTravelStore((s) => s.closeAuthModal);
+  const openAuthModal = useTravelStore((s) => s.openAuthModal);
+  const addToast = useTravelStore((s) => s.addToast);
   const [isLoading, setIsLoading] = useState(false);
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

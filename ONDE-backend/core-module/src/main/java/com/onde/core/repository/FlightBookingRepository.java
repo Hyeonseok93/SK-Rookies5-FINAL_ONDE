@@ -3,15 +3,23 @@ package com.onde.core.repository;
 import com.onde.core.entity.flight.BookingStatus;
 import com.onde.core.entity.flight.FlightBooking;
 import com.onde.core.entity.flight.SeatClass;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface FlightBookingRepository extends JpaRepository<FlightBooking, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select fb from FlightBooking fb where fb.id = :id")
+    Optional<FlightBooking> findByIdForUpdate(@Param("id") Long id);
+
     List<FlightBooking> findByStatusAndReservedUntilBefore(BookingStatus status, LocalDateTime dateTime);
-    java.util.Optional<FlightBooking> findByBookingCode(String bookingCode);
+    Optional<FlightBooking> findByBookingCode(String bookingCode);
 
     @Query("SELECT COUNT(fb) FROM FlightBooking fb WHERE fb.flightSchedule.id = :scheduleId AND fb.seatClass = :seatClass AND fb.status IN (com.onde.core.entity.flight.BookingStatus.CONFIRMED, com.onde.core.entity.flight.BookingStatus.PENDING_PAYMENT)")
     long countActiveBookings(

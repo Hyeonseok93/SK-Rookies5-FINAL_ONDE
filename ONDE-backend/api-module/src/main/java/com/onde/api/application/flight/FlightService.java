@@ -5,12 +5,16 @@ import com.onde.api.application.flight.dto.FlightBookingResponse;
 import com.onde.api.application.flight.dto.FlightSearchRequest;
 import com.onde.api.application.flight.dto.FlightSearchResponse;
 import com.onde.core.entity.flight.*;
+import com.onde.core.entity.payment.Payment;
+import com.onde.core.entity.payment.PaymentStatus;
 import com.onde.core.security.PassportFieldCodec;
 import com.onde.core.exception.ErrorCode;
+import com.onde.core.exception.ForbiddenException;
 import com.onde.core.exception.NotFoundException;
 import com.onde.core.exception.ValidationException;
 import com.onde.core.repository.FlightBookingRepository;
 import com.onde.core.repository.FlightScheduleRepository;
+import com.onde.core.repository.PaymentRepository;
 import com.onde.core.repository.SeatInventoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +38,7 @@ public class FlightService {
     private final FlightScheduleRepository flightScheduleRepository;
     private final SeatInventoryRepository seatInventoryRepository;
     private final FlightBookingRepository flightBookingRepository;
+    private final PaymentRepository paymentRepository;
     private final PassportFieldCodec passportFieldCodec;
 
     @Cacheable(value = "flightSearch", key = "#a0", unless = "#result == null")
@@ -169,12 +174,35 @@ public class FlightService {
     }
 
     /**
-     * [Day 9] 예약 결제 확정 로직 (예약 상태를 CONFIRMED로 최종 업데이트)
+     * 예약 결제 확정 확인.
+     * PaymentService.validate 시점에 이미 CONFIRMED로 바뀌는 것이 정상이며,
+     * 여기서는 소유권·금액·PAID 결제 존재 여부를 검증하는 idempotent 확인입니다.
      */
     @Transactional
-    public void confirmBooking(String bookingCode) {
+    public void confirmBooking(String bookingCode, Long userId, BigDecimal expectedAmount) {
         FlightBooking booking = flightBookingRepository.findByBookingCode(bookingCode)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.FLIGHT_SCHEDULE_NOT_FOUND)); // 예외 코드는 기존 정의된 NotFoundException 활용
+                .orElseThrow(() -> new NotFoundException(ErrorCode.BOOKING_NOT_FOUND));
+
+        if (!booking.getUserId().equals(userId)) {
+            throw new ForbiddenException(ErrorCode.RESERVATION_NOT_OWNER);
+        }
+
+        if (expectedAmount == null || booking.getTotalPrice().compareTo(expectedAmount) != 0) {
+            throw new IllegalArgumentException("결제 금액이 일치하지 않습니다.");
+        }
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+            return;
+        }
+
+        Payment payment = paymentRepository
+                .findFirstByReservationIdAndReservationTypeOrderByIdDesc(booking.getId(), "FLIGHT")
+                .orElseThrow(() -> new IllegalArgumentException("결제 내역이 없습니다."));
+
+        if (payment.getStatus() != PaymentStatus.PAID) {
+            throw new IllegalArgumentException("결제가 완료되지 않았습니다.");
+        }
+
         booking.setStatus(BookingStatus.CONFIRMED);
         flightBookingRepository.save(booking);
     }

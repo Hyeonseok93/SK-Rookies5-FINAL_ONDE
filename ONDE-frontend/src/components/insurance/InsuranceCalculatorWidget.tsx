@@ -34,8 +34,12 @@ function resolveApiErrorMessage(err: unknown): string {
 
 export const InsuranceCalculatorWidget: React.FC = () => {
   const navigate = useNavigate();
-  const { insured_details, premium_estimate, set_premium_estimate } = useInsuranceStore();
-  const { addToast, isLoggedIn, openAuthModal } = useTravelStore();
+  const insured_details = useInsuranceStore((s) => s.insured_details);
+  const premium_estimate = useInsuranceStore((s) => s.premium_estimate);
+  const set_premium_estimate = useInsuranceStore((s) => s.set_premium_estimate);
+  const addToast = useTravelStore((s) => s.addToast);
+  const isLoggedIn = useTravelStore((s) => s.isLoggedIn);
+  const openAuthModal = useTravelStore((s) => s.openAuthModal);
 
   const [insuredName, setInsuredName] = useState('');
   const [gender, setGender] = useState<'M' | 'F'>('M');
@@ -167,17 +171,21 @@ export const InsuranceCalculatorWidget: React.FC = () => {
           return;
         }
         const policy = res.data;
+        if (policy.policyId == null || policy.policyId <= 0) {
+          addToast(res.message || '보험 증권 ID를 받지 못했습니다. 다시 시도해 주세요.', 'warning');
+          return;
+        }
         setInsuredName('');
         setIsAgreed(false);
         navigate('/payment', {
           state: buildPaymentCheckout({
             reservationType: 'INSURANCE',
-            reservationId: policy.policyId ?? 0,
+            reservationId: policy.policyId,
             productTitle: `🛡️ 여행자 보험 (${insured_details.coverageLevel})`,
             productSubtitle: `피보험자: ${insuredName} | 플랜: ${insured_details.coverageLevel}`,
             categoryLabel: '여행자 보험',
             categoryIcon: 'fa-shield-halved',
-            totalAmount: policy.totalPremium,
+            totalAmount: policy.totalPremium ?? premium_estimate.calculatedPremium,
             usedMileage: 0,
             dateSummary: `${insured_details.startDate} ~ ${insured_details.endDate}`,
             detailLines: [

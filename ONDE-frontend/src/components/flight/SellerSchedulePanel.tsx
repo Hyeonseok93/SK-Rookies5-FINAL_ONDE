@@ -16,7 +16,7 @@ import { formatYearMonthValue, getDefaultYearMonthValue, parseYearMonthValue } f
 import { extractApiErrorMessage } from '@/utils/apiResponse';
 
 export const SellerSchedulePanel: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
 
   const [routes, setRoutes] = useState<SellerFlightRouteDto[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<number | undefined>(undefined);

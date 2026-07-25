@@ -4,10 +4,8 @@ import { LoginForm } from './LoginForm';
 import { SignupForm } from './SignupForm';
 
 export const AuthModal: React.FC = () => {
-  const { 
-    authModalTab, 
-    closeAuthModal, 
-  } = useTravelStore();
+  const authModalTab = useTravelStore((s) => s.authModalTab);
+  const closeAuthModal = useTravelStore((s) => s.closeAuthModal);
 
   // Handle ESC key press to close modal
   useEffect(() => {

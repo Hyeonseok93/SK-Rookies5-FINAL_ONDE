@@ -22,7 +22,9 @@ function isProtectedAdminRole(role: string): boolean {
 }
 
 export const AdminUserPanel: React.FC = () => {
-  const { addToast, openConfirmPopup, memberRole } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
+  const openConfirmPopup = useTravelStore((s) => s.openConfirmPopup);
+  const memberRole = useTravelStore((s) => s.memberRole);
   const { revealField } = useAdminMemberReveal();
   const canEditMembers = canManageMembers(memberRole);
   const [users, setUsers] = useState<AdminMemberDto[]>([]);

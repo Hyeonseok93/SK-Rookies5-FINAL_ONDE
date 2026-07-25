@@ -8,23 +8,16 @@ import com.onde.admin.security.AdminMemberIdentitySupport;
 import com.onde.core.entity.member.Member;
 import com.onde.core.entity.settlement.Settlement;
 import com.onde.core.entity.settlement.SettlementStatus;
-import com.onde.core.repository.PaymentRepository;
-import com.onde.core.repository.SettlementRepository;
-import com.onde.core.security.PersonalDataMasker;
 import com.onde.core.security.SensitiveRevealAuthService;
 import com.onde.core.security.dto.SensitiveRevealPasswordRequest;
 import com.onde.core.support.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -43,7 +36,6 @@ import java.util.Map;
 public class AdminSettlementController {
 
     private final AdminSettlementService adminSettlementService;
-    private final SettlementRepository settlementRepository;
     private final AdminMemberIdentitySupport adminMemberIdentitySupport;
     private final SensitiveRevealAuthService sensitiveRevealAuthService;
 
@@ -63,45 +55,8 @@ public class AdminSettlementController {
             @RequestParam(name = "status", required = false) SettlementStatus status,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size) {
-        
-        Page<Settlement> result;
-        // 1. 상태(status) 파라미터 유무에 따라 조건별 분기 조회 수행
-        if (status != null) {
-            result = settlementRepository.findByStatus(status, PageRequest.of(page, size));
-        } else {
-            result = settlementRepository.findAll(PageRequest.of(page, size));
-        }
-        
-        java.util.List<Map<String, Object>> settlementList = new java.util.ArrayList<>();
-        for (Settlement s : result.getContent()) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", s.getId());
-            map.put("settlementId", PersonalDataMasker.maskNumericId(s.getId()));
-            // 정산일자 문자열 변환 매핑
-            map.put("settlementMonth", s.getSettlementDate().toString());
-            // 매출 원금액 (판매 총액)
-            map.put("grossAmount", s.getGrossAmount());
-            // 플랫폼 수수료액
-            map.put("commission", s.getCommission());
-            // 판매자에게 지급할 실정산 금액 (grossAmount - commission)
-            map.put("netAmount", s.getNetAmount());
-            // 정산 진행 단계 상태
-            map.put("status", s.getStatus());
-            map.put("sellerId", s.getSellerId());
 
-            com.onde.core.entity.settlement.SellerAccount account = adminSettlementService.getAccount(s.getSellerId());
-            map.put("sellerName", PersonalDataMasker.maskName(account.getAccountHolder()));
-            map.put("bankName", PersonalDataMasker.maskBankName(account.getBankName()));
-            map.put("accountNumber", PersonalDataMasker.maskAccountNumber(account.getAccountNumber()));
-            
-            settlementList.add(map);
-        }
-
-        // 최종 응답 DTO 맵 구성
-        Map<String, Object> data = new HashMap<>();
-        data.put("settlements", settlementList);
-        data.put("totalCount", result.getTotalElements());
-        
+        Map<String, Object> data = adminSettlementService.getSettlements(status, page, size);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
@@ -114,16 +69,7 @@ public class AdminSettlementController {
         Member admin = adminMemberIdentitySupport.requireMember(userDetails);
         sensitiveRevealAuthService.requirePasswordVerifiedMember(admin.getId(), request.getPassword());
 
-        Settlement settlement = settlementRepository.findById(settlementId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 정산 건이 존재하지 않습니다."));
-
-        com.onde.core.entity.settlement.SellerAccount account = adminSettlementService.getAccount(settlement.getSellerId());
-        AdminSettlementRevealResponse response = AdminSettlementRevealResponse.builder()
-                .settlementId(settlement.getId())
-                .sellerName(account.getAccountHolder())
-                .bankName(account.getBankName())
-                .accountNumber(account.getAccountNumber())
-                .build();
+        AdminSettlementRevealResponse response = adminSettlementService.revealSettlement(settlementId);
         return ResponseEntity.ok(ApiResponse.success(response, "정산 원문 조회 성공"));
     }
 
@@ -148,7 +94,7 @@ public class AdminSettlementController {
         data.put("settlementId", updated.getId());
         data.put("status", updated.getStatus());
         data.put("approvedAt", updated.getApprovedAt());
-        
+
         return ResponseEntity.ok(ApiResponse.success(data, "1차 승인 처리되었습니다."));
     }
 
@@ -210,7 +156,7 @@ public class AdminSettlementController {
         data.put("settlementId", updated.getId());
         data.put("status", updated.getStatus());
         data.put("finalizedAt", updated.getFinalizedAt());
-        
+
         return ResponseEntity.ok(ApiResponse.success(data, "정산이 최종 확정되었습니다."));
     }
 
@@ -222,29 +168,8 @@ public class AdminSettlementController {
     public ResponseEntity<ApiResponse<AdminSettlementDetailResponse>> getSettlementDetails(
             @PathVariable("settlementId") Long settlementId) {
 
-        Settlement settlement = settlementRepository.findById(settlementId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 정산 건이 존재하지 않습니다."));
-
-        List<PaymentRepository.SettlementDetailProjection> projections =
-                adminSettlementService.getSettlementDetails(settlementId);
-
-        List<AdminSettlementDetailResponse.DetailItem> items = projections.stream()
-                .map(p -> AdminSettlementDetailResponse.DetailItem.builder()
-                        .paymentId(p.getPaymentId())
-                        .reservationId(p.getReservationId())
-                        .targetType(p.getTargetType())
-                        .productName(p.getProductName())
-                        .amount(p.getAmount())
-                        .paymentDate(p.getPaymentDate())
-                        .build())
-                .collect(Collectors.toList());
-
-        AdminSettlementDetailResponse response = AdminSettlementDetailResponse.builder()
-                .settlementId(PersonalDataMasker.maskNumericId(settlement.getId()))
-                .settlementDate(settlement.getSettlementDate())
-                .details(items)
-                .build();
-
+        AdminSettlementDetailResponse response =
+                adminSettlementService.getSettlementDetailResponse(settlementId);
         return ResponseEntity.ok(ApiResponse.success(response, "정산 상세 내역 조회가 완료되었습니다."));
     }
 }

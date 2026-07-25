@@ -1,7 +1,7 @@
 package com.onde.api.application.community;
 
 import com.onde.api.application.community.dto.*;
-import com.onde.api.config.MockS3Uploader;
+import com.onde.api.config.S3Uploader;
 import com.onde.core.entity.community.Post;
 import com.onde.core.entity.community.PostImage;
 import com.onde.core.entity.community.PostStatus;
@@ -36,14 +36,14 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostImageRepository postImageRepository;
     private final MemberRepository memberRepository;
-    private final MockS3Uploader s3Uploader;
+    private final S3Uploader s3Uploader;
     private final Executor imageUploadExecutor;
 
     public PostService(
             PostRepository postRepository,
             PostImageRepository postImageRepository,
             MemberRepository memberRepository,
-            MockS3Uploader s3Uploader,
+            S3Uploader s3Uploader,
             @Qualifier("imageUploadExecutor") Executor imageUploadExecutor
     ) {
         this.postRepository = postRepository;

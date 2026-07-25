@@ -14,6 +14,7 @@ import com.onde.core.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -102,5 +103,12 @@ public class CarService {
 
     public List<Car> getCarsBySellerId(Long sellerId) {
         return carRepository.findBySellerId(sellerId);
+    }
+
+    @Transactional(readOnly = true)
+    public String findModelNameById(Long carId) {
+        return carRepository.findById(carId)
+                .map(Car::getModelName)
+                .orElse(null);
     }
 }

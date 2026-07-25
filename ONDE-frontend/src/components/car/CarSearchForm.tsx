@@ -19,7 +19,7 @@ interface CarSearchFormProps {
 }
 
 export const CarSearchForm: React.FC<CarSearchFormProps> = ({ onSearch, loading = false }) => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
 
   const [pickupSpot, setPickupSpot] = useState(DEFAULT_CAR_RENTAL_CITY);
   const [pickupDate, setPickupDate] = useState(todayStr);

@@ -33,6 +33,16 @@ public class AwsS3Service {
     @Value("${aws.s3.endpoint}")
     private String s3Endpoint;
 
+    @Value("${aws.s3.access-key:onde-s3-user}")
+    private String s3AccessKey;
+
+    @Value("${aws.s3.secret-key:onde-s3-password}")
+    private String s3SecretKey;
+
+    /** local 전용. prod에서 true면 업로드 실패를 성공처럼 위장하지 말고 예외를 던지도록 기본 false */
+    @Value("${onde.s3.allow-mock-fallback:false}")
+    private boolean allowMockFallback;
+
     private S3Client s3Client;
     private S3Presigner s3Presigner;
     private boolean useMock = false;
@@ -62,7 +72,7 @@ public class AwsS3Service {
                 this.s3Client = S3Client.builder()
                         .region(Region.of(regionStr))
                         .credentialsProvider(software.amazon.awssdk.auth.credentials.StaticCredentialsProvider.create(
-                                software.amazon.awssdk.auth.credentials.AwsBasicCredentials.create("onde-s3-user", "onde-s3-password")))
+                                software.amazon.awssdk.auth.credentials.AwsBasicCredentials.create(s3AccessKey, s3SecretKey)))
                         .endpointOverride(java.net.URI.create(s3Endpoint))
                         .forcePathStyle(true) // MinIO 사용 시 필수 설정
                         .build();
@@ -70,15 +80,18 @@ public class AwsS3Service {
                 this.s3Presigner = S3Presigner.builder()
                         .region(Region.of(regionStr))
                         .credentialsProvider(software.amazon.awssdk.auth.credentials.StaticCredentialsProvider.create(
-                                software.amazon.awssdk.auth.credentials.AwsBasicCredentials.create("onde-s3-user", "onde-s3-password")))
+                                software.amazon.awssdk.auth.credentials.AwsBasicCredentials.create(s3AccessKey, s3SecretKey)))
                         .endpointOverride(java.net.URI.create(s3Endpoint))
                         .build();
 
-                this.useMock = false; // Mock 대신 실제 Local MinIO로 쓰기 로직 활성화
+                this.useMock = false;
                 log.info("S3Client and S3Presigner initialized successfully for Local MinIO.");
             } catch (Exception ex) {
+                if (!allowMockFallback) {
+                    throw new IllegalStateException("S3/MinIO client initialization failed and mock fallback is disabled.", ex);
+                }
                 this.useMock = true;
-                log.error("Failed to initialize Local MinIO S3Client. AWS S3 will run in MOCK Fallback mode.", ex);
+                log.error("Failed to initialize Local MinIO S3Client. MOCK Fallback mode enabled (onde.s3.allow-mock-fallback=true).", ex);
             }
         }
     }
@@ -112,7 +125,10 @@ public class AwsS3Service {
 
             return cloudFrontDomain + "/" + s3Key;
         } catch (Exception e) {
-            log.warn("[S3 UPLOAD FALLBACK] S3 upload failed for key={}: {}. Falling back to Mock URL.", s3Key, e.getMessage());
+            if (!allowMockFallback) {
+                throw new IllegalStateException("S3 upload failed for key=" + s3Key, e);
+            }
+            log.warn("[S3 UPLOAD FALLBACK] S3 upload failed for key={}: {}. Returning CDN path only (mock fallback).", s3Key, e.getMessage());
             return cloudFrontDomain + "/" + s3Key;
         }
     }

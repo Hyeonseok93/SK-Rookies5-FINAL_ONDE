@@ -7,7 +7,7 @@ import { useSellerDashboardReveal } from '@/hooks/useSellerDashboardReveal';
 import { extractApiErrorMessage } from '@/utils/apiResponse';
 
 export const SellerDashboardPanel: React.FC<{ onTabChange?: (tab: string) => void }> = ({ onTabChange }) => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const { revealField } = useSellerDashboardReveal();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<SellerDashboardDto | null>(null);

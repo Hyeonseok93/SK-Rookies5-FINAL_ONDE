@@ -29,13 +29,13 @@ public class AuthSessionValidator {
         String subject = jwtTokenProvider.getSubject(accessToken);
         String jti = jwtTokenProvider.getJti(accessToken);
         if (!StringUtils.hasText(subject)) {
-            return true;
+            return false;
         }
         Optional<RefreshToken> session = refreshTokenRepository.findById(Objects.requireNonNull(subject));
 
         if (session.isEmpty()) {
-            // 레거시(이메일 subject) 또는 세션 레코드 만료 — 서명·블랙리스트만 검증
-            return true;
+            // 세션 레코드 없음 — fail closed
+            return false;
         }
 
         RefreshToken activeSession = session.get();

@@ -9,7 +9,7 @@ import { KOREAN_BANKS } from '@/constants/appConstants';
 import { extractApiErrorMessage } from '@/utils/apiResponse';
 
 export const SellerAccountPanel: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
 
   const [businessName, setBusinessName] = useState('온데 글로벌 리조트');
   const [contactPhone, setContactPhone] = useState('02-1234-5678');

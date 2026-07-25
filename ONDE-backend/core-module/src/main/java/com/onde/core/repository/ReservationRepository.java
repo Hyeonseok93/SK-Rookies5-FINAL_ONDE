@@ -1,12 +1,22 @@
 package com.onde.core.repository;
 
 import com.onde.core.entity.reservation.Reservation;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 /**
  * Reservation 엔티티에 대한 데이터베이스 접근을 담당하는 리포지토리 인터페이스입니다.
  */
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from Reservation r where r.id = :id")
+    Optional<Reservation> findByIdForUpdate(@Param("id") Long id);
     org.springframework.data.domain.Page<Reservation> findByUserIdAndTargetType(
             Long userId, 
             com.onde.core.entity.reservation.ReservationTarget targetType, 

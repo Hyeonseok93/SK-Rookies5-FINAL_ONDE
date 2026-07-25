@@ -4,6 +4,7 @@ import com.onde.api.application.accommodation.dto.RoomInventoryUpdateRequest;
 import com.onde.api.application.accommodation.dto.RoomInventoryBulkUpdateRequest;
 import com.onde.api.application.accommodation.dto.RoomInventoryBulkUpdateResponse;
 import com.onde.api.application.accommodation.dto.SellerAccommodationRegisterRequest;
+import com.onde.api.application.accommodation.dto.SellerAccommodationRegisterResponse;
 import com.onde.core.entity.accommodation.Accommodation;
 import com.onde.core.entity.accommodation.ApprovalStatus;
 import com.onde.core.entity.accommodation.Inventory;
@@ -89,6 +90,18 @@ public class SellerAccommodationService {
         }
 
         return savedAccommodation.getId();
+    }
+
+    @Transactional(readOnly = true)
+    public SellerAccommodationRegisterResponse toRegisterResponse(Long id) {
+        Accommodation accommodation = accommodationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("숙소 등록 정보를 찾을 수 없습니다."));
+        return SellerAccommodationRegisterResponse.builder()
+                .accommodationId(accommodation.getId())
+                .name(accommodation.getName())
+                .thumbnailUrl(accommodation.getThumbnailUrl())
+                .approvalStatus(accommodation.getApprovalStatus())
+                .build();
     }
 
     public List<Inventory> getRoomInventories(Long roomId, LocalDate startDate, LocalDate endDate) {

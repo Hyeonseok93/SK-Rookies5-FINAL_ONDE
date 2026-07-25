@@ -6,7 +6,7 @@ import { logoutToHome } from '@/utils/authSession';
 import { ADMIN_PASSWORD_POLICY_HINT, validatePassword } from '@/utils/passwordPolicy';
 
 export const AdminPasswordPanel: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');

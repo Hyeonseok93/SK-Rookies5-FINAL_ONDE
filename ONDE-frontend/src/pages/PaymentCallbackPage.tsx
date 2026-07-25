@@ -2,13 +2,19 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTravelStore } from '@/store/useTravelStore';
 
-/** 모바일 결제 리다이렉트 콜백 — PC 결제는 PaymentPage 인라인 처리 사용 */
+/**
+ * 외부 PG 리다이렉트 콜백 경로.
+ * ONDE는 인앱 지갑 결제만 지원하므로 콜백 파라미터를 파싱·승인하지 않는다.
+ */
 export const PaymentCallbackPage: React.FC = () => {
   const navigate = useNavigate();
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
 
   useEffect(() => {
-    addToast('결제 결과를 확인 중입니다. 잠시만 기다려 주세요.', 'info');
+    addToast(
+      '외부 결제 콜백은 지원되지 않습니다. 결제는 앱 내 결제 화면에서 완료해 주세요.',
+      'warning'
+    );
     navigate('/mypage', { replace: true });
   }, [navigate, addToast]);
 
@@ -16,10 +22,12 @@ export const PaymentCallbackPage: React.FC = () => {
     <div className="payment-page page-hero-gap">
       <div className="payment-shell payment-success-panel">
         <div className="payment-success-icon">
-          <i className="fa-solid fa-spinner fa-spin"></i>
+          <i className="fa-solid fa-triangle-exclamation"></i>
         </div>
-        <h2 className="payment-success-title">결제 결과 확인 중</h2>
-        <p className="payment-success-desc">잠시 후 마이페이지로 이동합니다.</p>
+        <h2 className="payment-success-title">지원되지 않는 결제 콜백</h2>
+        <p className="payment-success-desc">
+          ONDE 결제는 앱 내에서만 완료됩니다. 마이페이지로 이동합니다.
+        </p>
       </div>
     </div>
   );

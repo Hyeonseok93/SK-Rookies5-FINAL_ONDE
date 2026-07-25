@@ -19,7 +19,7 @@ import {
 } from '@/utils/sellerCarGroups';
 
 export const SellerCarPanel: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const [cars, setCars] = useState<SellerCarInventoryDto[]>([]);
   const [selectedGroupKey, setSelectedGroupKey] = useState('');
 

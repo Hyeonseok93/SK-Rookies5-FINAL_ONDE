@@ -8,7 +8,7 @@ import { RevealableMaskedField, RevealableMaskedText } from '@/components/common
 import { useMemberProfileReveal } from '@/hooks/useMemberProfileReveal';
 
 export const SellerProfilePanel: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const { revealField } = useMemberProfileReveal();
 
   const [maskedEmail, setMaskedEmail] = useState('');

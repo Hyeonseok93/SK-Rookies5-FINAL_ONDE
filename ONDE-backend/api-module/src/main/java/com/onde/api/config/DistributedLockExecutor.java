@@ -1,28 +1,37 @@
 package com.onde.api.config;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DistributedLockExecutor {
 
-    @Autowired(required = false)
-    private RedissonClient redissonClient;
+    private final RedissonClient redissonClient;
+    private final boolean allowFallback;
+
+    public DistributedLockExecutor(
+            @Autowired(required = false) RedissonClient redissonClient,
+            @Value("${onde.lock.allow-fallback:false}") boolean allowFallback) {
+        this.redissonClient = redissonClient;
+        this.allowFallback = allowFallback;
+    }
 
     /**
-     * [Day 9] Redisson 분산 락 라이프사이클 실행기 (Dynamic Fallback 모의 우회 기동 포함)
+     * Redisson 분산 락 라이프사이클 실행기.
+     * Redis 미가동 시에는 onde.lock.allow-fallback=true 인 경우에만 락 없이 실행합니다.
      */
     public <T> T executeWithLock(String key, long waitTimeSeconds, long leaseTimeSeconds, Callable<T> callback) {
-        // 로컬 개발 환경 및 Redis 미가동 시 Dynamic Fallback 작동 (무장애 모의 락 실행 우회)
         if (redissonClient == null) {
+            if (!allowFallback) {
+                throw new IllegalStateException("RedissonClient is not available and lock fallback is disabled.");
+            }
             log.warn("⚠️ [DISTRIBUTED LOCK FALLBACK] RedissonClient is not initialized. 우회하여 비즈니스 로직을 동적으로 직접 실행합니다.");
             try {
                 return callback.call();

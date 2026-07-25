@@ -2,9 +2,11 @@ package com.onde.api.security;
 
 import com.onde.api.security.oauth2.CustomOAuth2UserService;
 import com.onde.api.security.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.onde.core.config.AuthCookieProperties;
 import com.onde.core.config.CorsConfigurationSupport;
 import com.onde.core.config.CorsOriginProperties;
 import com.onde.core.security.AllowedHttpMethodFilter;
+import com.onde.core.security.SpaCsrfSupport;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -34,14 +36,16 @@ public class SecurityConfig {
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final AllowedHttpMethodFilter allowedHttpMethodFilter;
     private final CorsOriginProperties corsOriginProperties;
+    private final AuthCookieProperties authCookieProperties;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        SpaCsrfSupport.configure(http, authCookieProperties);
+
         http
                 // 1. 우리의 커스텀 CORS 설정을 등록하여 프론트 통신 차단 해제 (이식 완료)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -58,7 +62,6 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").denyAll()
                         .requestMatchers("/api/v1/health").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/v1/test/**").permitAll()
                         .requestMatchers("/api/v1/flights/search").permitAll()
                         .requestMatchers("/api/v1/insurance/calculate", "/api/v1/insurances/calculate").permitAll()
                         .requestMatchers("/api/v1/inventory/**", "/api/inventory/**").permitAll()

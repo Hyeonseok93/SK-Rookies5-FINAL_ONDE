@@ -98,6 +98,8 @@ export interface FlightBookingPayload {
   passengerName: string;
   passengerPassport: string;
   passengerBirthdate: string;
+  /** 현재 백엔드는 1명 예약만 지원 */
+  passengerCount?: number;
   totalPrice: number;
 }
 

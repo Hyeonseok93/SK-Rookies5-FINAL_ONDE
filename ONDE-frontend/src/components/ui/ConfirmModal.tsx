@@ -2,14 +2,12 @@ import React from 'react';
 import { useTravelStore } from '@/store/useTravelStore';
 
 export const ConfirmModal: React.FC = () => {
-  const { 
-    isConfirmPopupOpen, 
-    closeConfirmPopup,
-    confirmTitle,
-    confirmDescription,
-    confirmYesLabel,
-    confirmNoLabel
-  } = useTravelStore();
+  const isConfirmPopupOpen = useTravelStore((s) => s.isConfirmPopupOpen);
+  const closeConfirmPopup = useTravelStore((s) => s.closeConfirmPopup);
+  const confirmTitle = useTravelStore((s) => s.confirmTitle);
+  const confirmDescription = useTravelStore((s) => s.confirmDescription);
+  const confirmYesLabel = useTravelStore((s) => s.confirmYesLabel);
+  const confirmNoLabel = useTravelStore((s) => s.confirmNoLabel);
 
   // Handle ESC key press
   React.useEffect(() => {

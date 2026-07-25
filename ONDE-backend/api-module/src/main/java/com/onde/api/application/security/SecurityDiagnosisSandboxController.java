@@ -4,6 +4,7 @@ import com.onde.api.application.security.dto.SecurityDiagnosisSandboxRequest;
 import com.onde.api.application.security.dto.SecurityDiagnosisSandboxResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,7 @@ import java.nio.file.Files;
 @RestController
 @RequestMapping("/api/v1/admin/security-diagnosis")
 @RequiredArgsConstructor
+@Profile("local")
 @ConditionalOnProperty(name = "security.diagnosis.sandbox.enabled", havingValue = "true")
 public class SecurityDiagnosisSandboxController {
 

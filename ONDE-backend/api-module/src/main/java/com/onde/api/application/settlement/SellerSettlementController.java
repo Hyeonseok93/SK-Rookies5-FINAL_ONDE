@@ -7,7 +7,6 @@ import com.onde.api.security.LoginMember;
 import com.onde.core.entity.settlement.SellerAccount;
 import com.onde.core.entity.settlement.Settlement;
 import com.onde.core.repository.PaymentRepository;
-import com.onde.core.repository.SettlementRepository;
 import com.onde.core.support.ApiResponse;
 import com.onde.core.validation.ValidationLimits;
 import jakarta.validation.Valid;
@@ -38,7 +37,7 @@ import java.util.stream.Collectors;
 public class SellerSettlementController {
 
     private final SettlementService settlementService;
-    private final SettlementRepository settlementRepository;
+    private final SellerSettlementService sellerSettlementService;
 
     /**
      * [Day 10] 로그인한 판매자의 정산 내역을 페이징하여 조회합니다.
@@ -49,7 +48,7 @@ public class SellerSettlementController {
             @RequestParam(name = "page", defaultValue = "0") @Min(ValidationLimits.PAGE_MIN) int page,
             @RequestParam(name = "size", defaultValue = "12") @Min(ValidationLimits.PAGE_SIZE_MIN) @Max(ValidationLimits.PAGE_SIZE_MAX) int size) {
 
-        Page<Settlement> result = settlementRepository.findBySellerId(sellerId, PageRequest.of(page, size));
+        Page<Settlement> result = sellerSettlementService.getMySettlements(sellerId, PageRequest.of(page, size));
 
         Map<String, Object> data = new HashMap<>();
         data.put("settlements", result.getContent());
@@ -155,12 +154,7 @@ public class SellerSettlementController {
             @PathVariable("settlementId") Long settlementId,
             @LoginMember Long sellerId) {
 
-        Settlement settlement = settlementRepository.findById(settlementId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 정산 건이 존재하지 않습니다."));
-
-        if (!settlement.getSellerId().equals(sellerId)) {
-            throw new IllegalArgumentException("본인의 정산 내역만 조회할 수 있습니다.");
-        }
+        Settlement settlement = sellerSettlementService.requireOwnedSettlement(settlementId, sellerId);
 
         List<PaymentRepository.SettlementDetailProjection> projections =
                 settlementService.getSettlementDetails(settlementId, sellerId);

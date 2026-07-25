@@ -3,20 +3,29 @@ import { charge_wallet_api } from '@/api/userApi';
 import { useTravelStore } from '@/store/useTravelStore';
 
 export const WalletPanel: React.FC = () => {
-  const { walletBalance, setMemberProfile, membershipGrade, mileage, addToast } = useTravelStore();
+  const walletBalance = useTravelStore((s) => s.walletBalance);
+  const setMemberProfile = useTravelStore((s) => s.setMemberProfile);
+  const membershipGrade = useTravelStore((s) => s.membershipGrade);
+  const mileage = useTravelStore((s) => s.mileage);
+  const addToast = useTravelStore((s) => s.addToast);
   const [isCharging, setIsCharging] = useState(false);
   const [chargeAmount, setChargeAmount] = useState<number>(1000000);
 
   const handleCharge = async () => {
     setIsCharging(true);
-    const res = await charge_wallet_api(chargeAmount);
-    if (res.success) {
-      setMemberProfile({ mileage, membershipGrade }, res.data);
-      addToast(`지갑에 ₩${chargeAmount.toLocaleString('ko-KR')}이 충전되었습니다.`, 'success');
-    } else {
-      addToast(res.message, 'warning');
+    try {
+      const res = await charge_wallet_api(chargeAmount);
+      if (res.success) {
+        setMemberProfile({ mileage, membershipGrade }, res.data);
+        addToast(`지갑에 ₩${chargeAmount.toLocaleString('ko-KR')}이 충전되었습니다.`, 'success');
+      } else {
+        addToast(res.message, 'warning');
+      }
+    } catch {
+      addToast('지갑 충전 중 오류가 발생했습니다.', 'warning');
+    } finally {
+      setIsCharging(false);
     }
-    setIsCharging(false);
   };
 
   return (

@@ -6,7 +6,8 @@ import { canDeployLbsMarkers } from '@/utils/adminPermissions';
 import { extractApiErrorMessage } from '@/utils/apiResponse';
 
 export const AdminLBSPanel: React.FC = () => {
-  const { addToast, memberRole } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
+  const memberRole = useTravelStore((s) => s.memberRole);
   const canDeploy = canDeployLbsMarkers(memberRole);
 
   const [markerName, setMarkerName] = useState('서울 한남 더 테라스');

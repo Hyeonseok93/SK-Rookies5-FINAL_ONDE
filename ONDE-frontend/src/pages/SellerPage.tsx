@@ -22,7 +22,7 @@ const SIDEBAR_ITEMS = [
 ];
 
 export const SellerPage: React.FC = () => {
-  const { username } = useTravelStore();
+  const username = useTravelStore((s) => s.username);
   const [activeTab, setActiveTab] = useState<SellerTab>('dashboard');
 
   const renderPanel = () => {

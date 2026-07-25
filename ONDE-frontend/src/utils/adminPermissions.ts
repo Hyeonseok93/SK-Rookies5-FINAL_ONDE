@@ -87,9 +87,31 @@ export function canReadDashboardCharts(role: string | null | undefined): boolean
   return isSuperAdmin(role) || isSellerAdmin(role) || isUserAdmin(role);
 }
 
-/** LBS·정산 등 고권한 메뉴 — 일반 관리자에게는 사이드바에서 숨김 */
+/**
+ * 관리자 사이드바 탭 접근.
+ * - viewOnly(USER_ADMIN): stat / approve / book / community / password (approve·book은 조회)
+ * - settlement: canAccessSettlement
+ * - user: canManageMembers
+ * - lbs: canDeployLbsMarkers (슈퍼만)
+ * - mutate 권한은 canApproveProducts 등 별도 가드
+ */
 export function canAccessAdminTab(role: string | null | undefined, tab: AdminTabId): boolean {
   if (!role || !isAdminRole(role)) return false;
-  if (tab === 'lbs' && isViewOnlyAdmin(role)) return false;
-  return true;
+
+  switch (tab) {
+    case 'settlement':
+      return canAccessSettlement(role);
+    case 'user':
+      return canManageMembers(role);
+    case 'lbs':
+      return canDeployLbsMarkers(role);
+    case 'stat':
+    case 'approve':
+    case 'book':
+    case 'community':
+    case 'password':
+      return true;
+    default:
+      return false;
+  }
 }

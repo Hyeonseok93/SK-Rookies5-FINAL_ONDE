@@ -21,8 +21,10 @@ const defaultSearch = (): FlightSearchParams => ({
 });
 
 export const FlightPage: React.FC = () => {
-  const { addToast } = useTravelStore();
-  const { search_query, set_search_query, set_search_results } = useFlightStore();
+  const addToast = useTravelStore((s) => s.addToast);
+  const search_query = useFlightStore((s) => s.search_query);
+  const set_search_query = useFlightStore((s) => s.set_search_query);
+  const set_search_results = useFlightStore((s) => s.set_search_results);
   const [searchParams, setSearchParams] = useState<FlightSearchParams | null>(null);
   const [results, setResults] = useState<FlightSearchResponse | null>(null);
   const [loading, setLoading] = useState(false);

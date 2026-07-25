@@ -3,7 +3,8 @@ import { useTravelStore } from '@/store/useTravelStore';
 import waitingImg from '@/assets/waiting.png';
 
 export const SellerPendingModal: React.FC = () => {
-  const { isSellerPendingPopupOpen, closeSellerPendingPopup } = useTravelStore();
+  const isSellerPendingPopupOpen = useTravelStore((s) => s.isSellerPendingPopupOpen);
+  const closeSellerPendingPopup = useTravelStore((s) => s.closeSellerPendingPopup);
 
   React.useEffect(() => {
     if (!isSellerPendingPopupOpen) return;

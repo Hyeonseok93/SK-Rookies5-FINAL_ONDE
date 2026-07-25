@@ -10,12 +10,9 @@ import com.onde.core.entity.member.MemberRole;
 import com.onde.core.entity.member.MemberStatus;
 import com.onde.admin.application.member.dto.AdminMemberRevealResponse;
 import com.onde.admin.security.AdminMemberIdentitySupport;
-import com.onde.core.exception.BusinessException;
-import com.onde.core.exception.ErrorCode;
 import com.onde.core.security.PersonalDataMasker;
 import com.onde.core.security.SensitiveRevealAuthService;
 import com.onde.core.security.dto.SensitiveRevealPasswordRequest;
-import com.onde.core.repository.MemberRepository;
 import com.onde.core.support.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +36,6 @@ import java.util.Map;
 public class AdminMemberController {
 
     private final AdminMemberService adminMemberService;
-    private final MemberRepository memberRepository;
     private final AdminMemberIdentitySupport adminMemberIdentitySupport;
     private final SensitiveRevealAuthService sensitiveRevealAuthService;
 
@@ -67,8 +63,7 @@ public class AdminMemberController {
         Member admin = adminMemberIdentitySupport.requireMember(userDetails);
         sensitiveRevealAuthService.requirePasswordVerifiedMember(admin.getId(), request.getPassword());
 
-        Member member = memberRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member member = adminMemberService.requireMember(id);
 
         AdminMemberRevealResponse response = AdminMemberRevealResponse.builder()
                 .memberId(member.getId())
@@ -99,8 +94,8 @@ public class AdminMemberController {
                                              @Valid @RequestBody RoleUpdateRequest request,
                                              Principal principal) {
         Long currentAdminId = getAdminIdFromPrincipal(principal);
-        MemberRole appliedRole = adminMemberService.updateMemberRole(id, currentAdminId, request.resolvePrimaryRole());
-        Member member = memberRepository.findById(id).orElseThrow();
+        Member member = adminMemberService.updateMemberRole(id, currentAdminId, request.resolvePrimaryRole());
+        MemberRole appliedRole = member.getRole();
         List<String> roles = request.getRoles() != null && !request.getRoles().isEmpty()
                 ? request.getRoles().stream().map(MemberRole::name).toList()
                 : List.of(appliedRole.name());
@@ -119,8 +114,8 @@ public class AdminMemberController {
             @PathVariable Long id,
             @Valid @RequestBody MemberStatusUpdateRequest request) {
 
-        MemberStatus appliedStatus = adminMemberService.updateMemberStatus(id, request.getStatus());
-        Member member = memberRepository.findById(id).orElseThrow();
+        Member member = adminMemberService.updateMemberStatus(id, request.getStatus());
+        MemberStatus appliedStatus = member.getStatus();
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("memberId", PersonalDataMasker.maskNumericId(id));

@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.math.BigDecimal;
 import java.util.Map;
 import com.onde.api.application.flight.dto.FlightPaymentConfirmRequest;
 import com.onde.core.validation.ValidationLimits;
@@ -56,51 +55,22 @@ public class FlightController {
     }
 
     /**
-     * SAGA 패턴 기반 보상 트랜잭션 (외부 결제 성공 후 로컬 DB 갱신 실패 시 자동 승인 취소 결합)
+     * 항공 예약 결제 확정 확인 (PaymentService.validate 이후 idempotent 확인)
      */
     @PostMapping("/reservations/flights/{booking_code}/confirm")
     public ResponseEntity<ApiResponse<Map<String, Object>>> confirmPayment(
             @PathVariable("booking_code") @Size(max = ValidationLimits.BOOKING_CODE_MAX) String bookingCode,
-            @Valid @RequestBody FlightPaymentConfirmRequest paymentPayload) {
-        log.info("💳 Payment confirmation request received for bookingCode: {}", bookingCode);
-        String pgTransactionId = paymentPayload.getPgTransactionId();
-        BigDecimal amount = paymentPayload.getPaymentAmount();
+            @Valid @RequestBody FlightPaymentConfirmRequest paymentPayload,
+            @LoginMember Long userId) {
+        log.info("Payment confirmation request received for bookingCode: {}", bookingCode);
 
-        // 1. 외부 결제 승인 가상 성공 (Log 기록)
-        log.info("💰 [PAYMENT SUCCESS] Payment approved. pgTransactionId={}, amount={}", pgTransactionId, amount);
+        flightService.confirmBooking(bookingCode, userId, paymentPayload.getPaymentAmount());
 
-        // 2. 로컬 DB 데이터 갱신 시도 (시뮬레이션 예외 처리)
-        try {
-            // 강제 실패 힌트("FAIL")가 들어오는 경우 로컬 DB 정합성 장애 상황 모의 유발
-            if (pgTransactionId.contains("FAIL")) {
-                throw new org.springframework.dao.DataRetrievalFailureException(
-                        "Database connection timed out during reservation status update.");
-            }
-
-            // [정상 흐름]: 실제 비즈니스에서는 예약 상태를 CONFIRMED로 최종 갱신
-            flightService.confirmBooking(bookingCode);
-            log.info("🎉 [DB SUCCESS] FlightBooking status updated to CONFIRMED for bookingCode={}", bookingCode);
-            return ResponseEntity.ok(ApiResponse.success(
-                    Map.of("bookingCode", bookingCode, "status", "CONFIRMED", "pgTransactionId", pgTransactionId),
-                    "결제 승인 및 예약 확정이 최종 완료되었습니다."));
-        } catch (Exception e) {
-            log.error("❌ [DB ERROR] Local database update failed due to: {}", e.getMessage());
-
-            // 3. [보상 트랜잭션 집행 (SAGA Pattern Compensation)]
-            // 로컬 DB 장애 감지 시, 승인되었던 외부 결제 승인을 비동기/동기로 즉각 전액 강제 취소 요청
-            log.warn("🔄 [SAGA COMPENSATING] 로컬 DB 갱신 장애 감지! 승인된 결제건에 대해 즉시 자동 취소를 청구합니다. targetPgTxId={}",
-                    pgTransactionId);
-
-            // 환불 FeignClient 연동 시뮬레이션 및 가상 결제 취소 연동
-            triggerCompensatingRefund(pgTransactionId, amount);
-
-            // 최종 비즈니스 예외 전파
-            throw new com.onde.core.exception.ValidationException(
-                    com.onde.core.exception.ErrorCode.INVALID_INPUT_VALUE);
-        }
-    }
-
-    private void triggerCompensatingRefund(String pgTransactionId, BigDecimal amount) {
-        log.info("💰 [SAGA COMPENSATION MOCK SUCCESS] Auto-refund mock completed for pgTransactionId={} with amount={}", pgTransactionId, amount);
+        return ResponseEntity.ok(ApiResponse.success(
+                Map.of(
+                        "bookingCode", bookingCode,
+                        "status", "CONFIRMED",
+                        "pgTransactionId", paymentPayload.getPgTransactionId()),
+                "결제 승인 및 예약 확정이 최종 완료되었습니다."));
     }
 }

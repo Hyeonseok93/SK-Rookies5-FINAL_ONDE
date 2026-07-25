@@ -15,7 +15,8 @@ import { RevealableMaskedText } from '@/components/common/RevealableMaskedText';
 import { useAdminSettlementReveal } from '@/hooks/useAdminSettlementReveal';
 
 export const AdminSettlementPanel: React.FC = () => {
-  const { addToast, memberRole } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
+  const memberRole = useTravelStore((s) => s.memberRole);
   const { revealField } = useAdminSettlementReveal();
   const [settlements, setSettlements] = useState<AdminSettlementDto[]>([]);
   const [loading, setLoading] = useState(false);

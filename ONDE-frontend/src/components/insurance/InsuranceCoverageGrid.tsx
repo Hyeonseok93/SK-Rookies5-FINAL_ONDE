@@ -2,7 +2,8 @@ import React from 'react';
 import { useInsuranceStore } from '@/store/useInsuranceStore';
 
 export const InsuranceCoverageGrid: React.FC = () => {
-  const { insured_details, set_insured_details } = useInsuranceStore();
+  const insured_details = useInsuranceStore((s) => s.insured_details);
+  const set_insured_details = useInsuranceStore((s) => s.set_insured_details);
 
   const plans = [
     {

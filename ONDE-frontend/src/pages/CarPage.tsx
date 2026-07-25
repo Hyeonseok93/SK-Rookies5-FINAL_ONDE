@@ -14,7 +14,7 @@ const defaultSearch = (): CarSearchParams => ({
 });
 
 export const CarPage: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const [searchParams, setSearchParams] = useState<CarSearchParams | null>(null);
   const [cars, setCars] = useState<CarDto[]>([]);
   const [loading, setLoading] = useState(false);

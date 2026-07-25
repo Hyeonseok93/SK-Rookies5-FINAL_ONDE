@@ -7,7 +7,7 @@ import { extractApiErrorMessage } from '@/utils/apiResponse';
 
 export const SignupForm: React.FC = () => {
   const { isLoading, handleSignup, validateEmail } = useAuthForm();
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
 
   const [signupRole, setSignupRole] = useState<'cust' | 'sell'>('cust');
   const [signupEmail, setSignupEmail] = useState('');

@@ -28,20 +28,18 @@ function getAccountEmail(username: string): string {
 }
 
 export const MyPageDashboard: React.FC = () => {
-  const {
-    reservations,
-    username,
-    name,
-    nickname,
-    mileage,
-    membershipGrade,
-    isLoggedIn,
-    setMemberProfile,
-    setReservations,
-    cancelReservation,
-    addToast,
-    openConfirmPopup,
-  } = useTravelStore();
+  const reservations = useTravelStore((s) => s.reservations);
+  const username = useTravelStore((s) => s.username);
+  const name = useTravelStore((s) => s.name);
+  const nickname = useTravelStore((s) => s.nickname);
+  const mileage = useTravelStore((s) => s.mileage);
+  const membershipGrade = useTravelStore((s) => s.membershipGrade);
+  const isLoggedIn = useTravelStore((s) => s.isLoggedIn);
+  const setMemberProfile = useTravelStore((s) => s.setMemberProfile);
+  const setReservations = useTravelStore((s) => s.setReservations);
+  const cancelReservation = useTravelStore((s) => s.cancelReservation);
+  const addToast = useTravelStore((s) => s.addToast);
+  const openConfirmPopup = useTravelStore((s) => s.openConfirmPopup);
 
   const [activeFilter, setActiveFilter] = useState<ReservationFilter>('all');
   const [mileageLogs, setMileageLogs] = useState<MileageLogDto[]>([]);

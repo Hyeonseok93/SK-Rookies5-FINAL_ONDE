@@ -47,9 +47,9 @@ class AdminMemberServiceTest {
                 .build();
         when(memberRepository.findById(10L)).thenReturn(Optional.of(seller));
 
-        MemberStatus updatedStatus = adminMemberService.updateMemberStatus(10L, MemberStatus.ACTIVE);
+        Member updated = adminMemberService.updateMemberStatus(10L, MemberStatus.ACTIVE);
 
-        assertEquals(MemberStatus.ACTIVE, updatedStatus);
+        assertEquals(MemberStatus.ACTIVE, updated.getStatus());
         assertEquals(MemberStatus.ACTIVE, seller.getStatus());
     }
 }

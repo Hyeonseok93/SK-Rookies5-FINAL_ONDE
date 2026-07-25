@@ -25,6 +25,9 @@ export interface PaymentPrepareDto {
   pgAmount: number;
   usedMileage: number;
   reservationId: number;
+  /** 지갑 거래 ID — validate 시 impUid로 사용 */
+  walletTxId?: string;
+  impUid?: string;
 }
 
 export interface PaymentValidateDto {

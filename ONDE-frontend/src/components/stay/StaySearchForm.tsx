@@ -19,7 +19,7 @@ interface StaySearchFormProps {
 }
 
 export const StaySearchForm: React.FC<StaySearchFormProps> = ({ onSearch, loading = false }) => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
 
   const [destinationCountry, setDestinationCountry] = useState<string>(DEFAULT_DESTINATION.country);
   const [destinationCity, setDestinationCity] = useState<string>(DEFAULT_DESTINATION.city);

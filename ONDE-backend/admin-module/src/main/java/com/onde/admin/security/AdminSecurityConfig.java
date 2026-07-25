@@ -1,8 +1,10 @@
 package com.onde.admin.security;
 
+import com.onde.core.config.AuthCookieProperties;
 import com.onde.core.config.CorsConfigurationSupport;
 import com.onde.core.config.CorsOriginProperties;
 import com.onde.core.security.AllowedHttpMethodFilter;
+import com.onde.core.security.SpaCsrfSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +32,7 @@ public class AdminSecurityConfig {
     private final AdminAccessDeniedHandler adminAccessDeniedHandler;
     private final AllowedHttpMethodFilter allowedHttpMethodFilter;
     private final CorsOriginProperties corsOriginProperties;
+    private final AuthCookieProperties authCookieProperties;
 
     @Value("${management.health.allowed-ip}")
     private String allowedIp;
@@ -47,7 +50,7 @@ public class AdminSecurityConfig {
             .httpBasic(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/admin/health/**").access((authentication, context) -> 
+                .requestMatchers("/api/v1/admin/health/**").access((authentication, context) ->
                     new AuthorizationDecision(new IpAddressMatcher(allowedIp).matches(context.getRequest())))
                 .anyRequest().denyAll()
             );
@@ -58,33 +61,34 @@ public class AdminSecurityConfig {
     /**
      * [2순위 필터 체인] 일반 어드민 비즈니스 로직 시스템
      */
-@Bean
+    @Bean
     @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        SpaCsrfSupport.configure(http, authCookieProperties);
+
         http
             // 1. REST API 환경을 위한 기본 로그인 방어 비활성화
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable)
-            
+
             // 2. JWT 인증을 사용하므로 세션을 생성하지 않도록 설정 (Stateless)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(adminAuthenticationEntryPoint)
                 .accessDeniedHandler(adminAccessDeniedHandler))
-            
+
             // 3. 인가(Authorization) 규칙 정의
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").denyAll()
                 // 어드민 전용 API 권한 제한
-                .requestMatchers("/api/v1/admin/**").hasAnyRole("SUPER_ADMIN", "SELLER_ADMIN", "USER_ADMIN") 
-                
-                // 그 외의 요청은 허용
-                .anyRequest().permitAll() 
+                .requestMatchers("/api/v1/admin/**").hasAnyRole("SUPER_ADMIN", "SELLER_ADMIN", "USER_ADMIN")
+
+                // 그 외의 요청은 거부
+                .anyRequest().denyAll()
             )
-            
+
             // 4. 커스텀하게 통합한 AdminJwtAuthenticationFilter를 시큐리티 필터 흐름 앞에 주입
             .addFilterBefore(allowedHttpMethodFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(adminJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

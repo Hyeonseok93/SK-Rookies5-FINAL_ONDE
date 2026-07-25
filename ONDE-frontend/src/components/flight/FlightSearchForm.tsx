@@ -23,7 +23,8 @@ interface FlightSearchFormProps {
 }
 
 export const FlightSearchForm: React.FC<FlightSearchFormProps> = ({ onSearch, loading = false }) => {
-  const { search_query, set_search_query } = useFlightStore();
+  const search_query = useFlightStore((s) => s.search_query);
+  const set_search_query = useFlightStore((s) => s.set_search_query);
 
   const handle_toggle_trip_type = () => {
     const nextType = search_query.tripType === 'RT' ? 'OW' : 'RT';

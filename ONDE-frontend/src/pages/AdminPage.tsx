@@ -24,7 +24,8 @@ const ALL_SIDEBAR_ITEMS: { id: AdminTabId; icon: string; label: string }[] = [
 ];
 
 export const AdminPage: React.FC = () => {
-  const { username, memberRole } = useTravelStore();
+  const username = useTravelStore((s) => s.username);
+  const memberRole = useTravelStore((s) => s.memberRole);
   const sidebarItems = useMemo(
     () => ALL_SIDEBAR_ITEMS.filter((item) => canAccessAdminTab(memberRole, item.id)),
     [memberRole]

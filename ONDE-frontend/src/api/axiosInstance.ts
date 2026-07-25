@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { refresh_token_api } from '@/api/authApi';
 import { ADMIN_API_BASE, USER_API_BASE } from '@/constants/apiConfig';
 import { hasPostLogoutRedirect, performLogout } from '@/utils/authSession';
@@ -10,6 +10,29 @@ declare module 'axios' {
   export interface AxiosRequestConfig {
     skipErrorRedirect?: boolean;
   }
+}
+
+const XSRF_COOKIE = 'XSRF-TOKEN';
+const XSRF_HEADER = 'X-XSRF-TOKEN';
+
+function readCookie(name: string): string | undefined {
+  const prefix = `${name}=`;
+  const match = document.cookie.split('; ').find((row) => row.startsWith(prefix));
+  if (!match) return undefined;
+  try {
+    return decodeURIComponent(match.slice(prefix.length));
+  } catch {
+    return match.slice(prefix.length);
+  }
+}
+
+/** Spring CookieCsrfTokenRepository: JS-readable XSRF-TOKEN → X-XSRF-TOKEN header */
+function attachCsrfHeader(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
+  const token = readCookie(XSRF_COOKIE);
+  if (token) {
+    config.headers.set(XSRF_HEADER, token);
+  }
+  return config;
 }
 
 const axiosDefaults = {
@@ -34,6 +57,9 @@ export const adminAxios = axios.create({
   baseURL: ADMIN_API_BASE,
   ...axiosDefaults,
 });
+
+userAxios.interceptors.request.use(attachCsrfHeader);
+adminAxios.interceptors.request.use(attachCsrfHeader);
 
 let isRefreshing = false;
 let refreshWaiters: Array<(success: boolean) => void> = [];

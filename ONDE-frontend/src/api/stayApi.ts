@@ -199,6 +199,7 @@ export interface RoomReservationResponse {
   reservationId: number;
   status: string;
   message: string;
+  totalPrice?: number;
 }
 
 export const book_room_api = async (
@@ -211,6 +212,10 @@ export const book_room_api = async (
     guests: payload.guests,
   });
   const res = unwrapApi<{ reservationId: number; status: string; message?: string; totalPrice?: number }>(raw);
+  const serverTotal =
+    res.data.totalPrice != null && !Number.isNaN(Number(res.data.totalPrice))
+      ? Number(res.data.totalPrice)
+      : undefined;
   return {
     success: res.success,
     message: res.message,
@@ -218,6 +223,7 @@ export const book_room_api = async (
       reservationId: res.data.reservationId,
       status: String(res.data.status),
       message: res.data.message ?? res.message,
+      ...(serverTotal != null ? { totalPrice: serverTotal } : {}),
     },
   };
 };
@@ -242,9 +248,14 @@ export const book_stay_api = async (
       guests: payload.guests ?? 2,
     }
   );
+  // 서버 totalPrice 우선 — 없을 때만 클라이언트 견적 fallback
+  const totalPrice = res.data.totalPrice ?? payload.totalPrice;
   return {
     ...res,
-    data: { ...res.data, totalPrice: payload.totalPrice },
+    data: {
+      ...res.data,
+      ...(totalPrice != null ? { totalPrice } : {}),
+    },
   };
 };
 

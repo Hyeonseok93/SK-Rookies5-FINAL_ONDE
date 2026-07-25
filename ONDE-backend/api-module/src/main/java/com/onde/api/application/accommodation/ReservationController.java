@@ -7,7 +7,6 @@ import com.onde.api.application.accommodation.dto.ReservationCancelResponse;
 import com.onde.api.application.accommodation.dto.ReservationResponse;
 import com.onde.api.security.LoginMember;
 import com.onde.core.entity.reservation.Reservation;
-import com.onde.core.repository.CarRepository;
 import com.onde.core.support.ApiResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -24,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final CarRepository carRepository;
+    private final CarService carService;
 
     /**
      * 숙소 예약 생성
@@ -57,9 +56,7 @@ public class ReservationController {
             @LoginMember Long memberId,
             @Valid @RequestBody CarReservationRequest req) {
         Reservation reservation = reservationService.reserveCar(memberId, req);
-        String modelName = carRepository.findById(req.getCarId())
-                .map(com.onde.core.entity.accommodation.Car::getModelName)
-                .orElse(null);
+        String modelName = carService.findModelNameById(req.getCarId());
         CarReservationResponse response = new CarReservationResponse(
                 reservation.getId(),
                 reservation.getTargetType(),

@@ -10,7 +10,8 @@ import {
 import { cleanImageUrl } from '@/types/feed';
 
 export const AdminCommunityPanel: React.FC = () => {
-  const { addToast, openConfirmPopup } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
+  const openConfirmPopup = useTravelStore((s) => s.openConfirmPopup);
   const [posts, setPosts] = useState<AdminPostDto[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [page, setPage] = useState(0);

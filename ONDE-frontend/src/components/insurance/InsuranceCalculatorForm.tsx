@@ -27,7 +27,9 @@ export const InsuranceCalculatorForm: React.FC<InsuranceCalculatorFormProps> = (
   quoteHint = '',
   handleApplyPolicy,
 }) => {
-  const { insured_details, set_insured_details, premium_estimate } = useInsuranceStore();
+  const insured_details = useInsuranceStore((s) => s.insured_details);
+  const set_insured_details = useInsuranceStore((s) => s.set_insured_details);
+  const premium_estimate = useInsuranceStore((s) => s.premium_estimate);
 
   const handle_input_change = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

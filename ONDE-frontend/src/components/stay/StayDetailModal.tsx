@@ -7,7 +7,6 @@ import { buildPaymentCheckout } from '@/utils/paymentCheckout';
 import {
   buildCalendarMonth,
   countNights,
-  monthLabel,
   todayStr,
   addDaysStr,
   isStayRangeAvailable,
@@ -15,15 +14,15 @@ import {
 } from '@/utils/calendarUtils';
 import { useTravelStore } from '@/store/useTravelStore';
 import { extractApiErrorMessage } from '@/utils/apiResponse';
-
-import { ListingThumbnail } from '@/components/common/ListingThumbnail';
 import { hasDisplayImage, hasDisplayPrice } from '@/utils/listingDisplay';
 
-// ─── constants ───────────────────────────────────────────────
-const PRIMARY = '#005ce6';
-const SECONDARY = '#ff5a5f';
+import { StayDetailHeader } from './StayDetailModal/StayDetailHeader';
+import { StayDetailDescription } from './StayDetailModal/StayDetailDescription';
+import { StayDetailDateBanner } from './StayDetailModal/StayDetailDateBanner';
+import { StayDetailCalendar } from './StayDetailModal/StayDetailCalendar';
+import { StayDetailGuestPicker } from './StayDetailModal/StayDetailGuestPicker';
+import { StayDetailFooter } from './StayDetailModal/StayDetailFooter';
 
-// ─── props ───────────────────────────────────────────────────
 interface StayDetailModalProps {
   stay: StayDto;
   roomId: number;
@@ -35,7 +34,6 @@ interface StayDetailModalProps {
   onClose: () => void;
 }
 
-// ─── component ───────────────────────────────────────────────
 export const StayDetailModal: React.FC<StayDetailModalProps> = ({
   stay,
   roomId,
@@ -47,7 +45,9 @@ export const StayDetailModal: React.FC<StayDetailModalProps> = ({
   onClose,
 }) => {
   const navigate = useNavigate();
-  const { addToast, isLoggedIn, openAuthModal } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
+  const isLoggedIn = useTravelStore((s) => s.isLoggedIn);
+  const openAuthModal = useTravelStore((s) => s.openAuthModal);
 
   // stay.soldOutDays를 Set으로 변환 (백엔드 연동 시 API 응답값으로 대체)
   const [booking, setBooking] = useState(false);
@@ -176,7 +176,6 @@ export const StayDetailModal: React.FC<StayDetailModalProps> = ({
     );
   }
 
-
   // Check if any sold-out day falls within the occupied stay nights
   function hasSoldOutInRange(start: string, end: string): boolean {
     return !isStayRangeAvailable(start, end, soldOutDays);
@@ -213,49 +212,6 @@ export const StayDetailModal: React.FC<StayDetailModalProps> = ({
       }
     }
   }
-
-  function getCellStyle(cell: { dateStr: string; disabled: boolean; isEmpty: boolean; isWeekend: boolean }) {
-    if (cell.isEmpty) return {};
-    const isStart = cell.dateStr === checkIn;
-    const isEnd = cell.dateStr === checkOut;
-    const inRange = checkIn && checkOut && cell.dateStr > checkIn && cell.dateStr < checkOut;
-
-    if (isStart || isEnd) {
-      return {
-        background: `linear-gradient(135deg, ${PRIMARY} 0%, ${SECONDARY} 100%)`,
-        color: '#fff',
-        borderRadius: '10px',
-        boxShadow: `0 4px 10px rgba(0,92,230,0.22)`,
-        border: '1.5px solid transparent',
-      };
-    }
-    if (inRange) {
-      return {
-        background: 'rgba(0,92,230,0.08)',
-        border: '1.5px solid rgba(0,92,230,0.15)',
-        borderRadius: '4px',
-        color: PRIMARY,
-      };
-    }
-    if (cell.disabled) {
-      return {
-        opacity: 0.4,
-        cursor: 'not-allowed',
-        background: '#f7f9fa',
-        borderRadius: '10px',
-        border: '1.5px solid transparent',
-      };
-    }
-    return {
-      cursor: 'pointer',
-      borderRadius: '10px',
-      border: '1.5px solid transparent',
-      transition: 'all 0.15s ease',
-    };
-  }
-
-
-
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -359,304 +315,53 @@ export const StayDetailModal: React.FC<StayDetailModalProps> = ({
           <i className="fa-solid fa-xmark" />
         </button>
 
-        {/* ── Fixed Header ── */}
-        <div style={{
-          display: 'flex', gap: '1.2rem', marginBottom: '0.8rem',
-          alignItems: 'center', borderBottom: '1px solid #ddd',
-          paddingBottom: '0.8rem', flexShrink: 0,
-        }}>
-          <div style={{
-            width: '65px', height: '65px', borderRadius: '12px',
-            overflow: 'hidden', flexShrink: 0, background: '#f0f2f5',
-          }}>
-            <ListingThumbnail
-              imageUrl={stay.imageUrl}
-              alt={stay.title}
-              iconClass="fa-hotel"
-              className="w-full h-full text-xl"
-              imgClassName="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h3 style={{
-              fontSize: '1.18rem', fontWeight: 800, marginBottom: '0.2rem',
-              color: '#1a1a1a', letterSpacing: '-0.5px', lineHeight: 1.3,
-            }}>
-              {stay.title}
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.78rem', color: '#717171' }}>
-              <span>
-                <i className="fa-solid fa-location-dot" />{' '}{stay.location}
-              </span>
-            </div>
-          </div>
-        </div>
+        <StayDetailHeader stay={stay} />
 
         {/* ── Scrollable Body ── */}
         <div style={{ overflowY: 'auto', flex: 1, paddingRight: '0.4rem', marginBottom: '0.8rem' }}>
+          {stay.description && <StayDetailDescription description={stay.description} />}
 
-          {/* Description */}
-          {stay.description && (
-            <div style={{
-              fontSize: '0.82rem',
-              color: '#4a4a4a',
-              lineHeight: 1.55,
-              marginBottom: '1rem',
-              padding: '0.85rem 1rem',
-              background: '#f8f9fa',
-              borderRadius: '12px',
-              border: '1px solid #e9ecef',
-              whiteSpace: 'pre-wrap',
-            }}>
-              {stay.description}
-            </div>
-          )}
+          <StayDetailDateBanner
+            checkIn={checkIn}
+            checkOut={checkOut}
+            isRangeSelected={isRangeSelected}
+            nights={nights}
+          />
 
-          {/* Date Banner */}
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(0,92,230,0.04) 0%, rgba(255,90,95,0.04) 100%)',
-            border: '1px solid rgba(0,92,230,0.1)',
-            borderRadius: '12px',
-            padding: '0.65rem 0.9rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '0.8rem',
-          }}>
-            <div>
-              <span style={{ fontSize: '0.62rem', fontWeight: 700, color: PRIMARY, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-                선택한 예약 일정
-              </span>
-              <strong style={{ fontSize: '0.9rem', color: '#1a1a1a' }}>
-                {isRangeSelected ? `${checkIn} ➔ ${checkOut}` : `${checkIn || '—'} ➔ 선택 대기 중`}
-              </strong>
-            </div>
-            <span style={{
-              background: isRangeSelected ? PRIMARY : SECONDARY, color: '#fff',
-              fontSize: '0.72rem', fontWeight: 800,
-              padding: '0.22rem 0.65rem', borderRadius: '999px',
-            }}>
-              {isRangeSelected ? `${nights}박 ${nights + 1}일` : '체크아웃 선택 대기'}
-            </span>
-          </div>
-
-          {/* Calendar */}
-          <div style={{
-            margin: '0.8rem 0', padding: '0.9rem 1rem',
-            border: '1px solid #ddd',
-            borderRadius: '12px',
-            background: '#fff',
-            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.015)',
-          }}>
-            {/* Cal Header */}
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              marginBottom: '0.7rem',
-            }}>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.4rem',
-                fontWeight: 800, fontSize: '0.88rem', color: '#1a1a1a',
-                borderLeft: `3px solid ${PRIMARY}`, paddingLeft: '0.45rem',
-              }}>
-                <span>📅</span>
-                <span>{monthLabel(calYear, calMonth)}</span>
-                <span style={{ fontSize: '0.68rem', fontWeight: 500, color: '#717171' }}>체크인/아웃 순 클릭</span>
-              </div>
-              <div style={{ display: 'flex', gap: '0.3rem' }}>
-                <button
-                  onClick={() => {
-                    if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
-                    else setCalMonth(m => m - 1);
-                  }}
-                  style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', width: '26px', height: '26px', cursor: 'pointer', fontSize: '0.75rem', color: '#717171' }}
-                >‹</button>
-                <button
-                  onClick={() => {
-                    if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
-                    else setCalMonth(m => m + 1);
-                  }}
-                  style={{ background: 'none', border: '1px solid #ddd', borderRadius: '6px', width: '26px', height: '26px', cursor: 'pointer', fontSize: '0.75rem', color: '#717171' }}
-                >›</button>
-              </div>
-            </div>
-
-            {/* Day-of-week header */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center', marginBottom: '4px' }}>
-              {['일', '월', '화', '수', '목', '금', '토'].map((d, i) => (
-                <div key={d} style={{ fontSize: '0.7rem', fontWeight: 700, color: i === 0 ? SECONDARY : i === 6 ? PRIMARY : '#717171', padding: '3px 0' }}>{d}</div>
-              ))}
-            </div>
-
-            {/* Cells */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
-              {cells.map((cell, idx) => {
-                if (cell.isEmpty) return <div key={idx} />;
-                const isSelected = cell.dateStr === checkIn || cell.dateStr === checkOut;
-                const style = getCellStyle(cell);
-                return (
-                  <div
-                    key={cell.dateStr}
-                    onClick={() => handleCellClick(cell.dateStr, cell.disabled)}
-                    style={{
-                      aspectRatio: '1.05',
-                      display: 'flex', flexDirection: 'column',
-                      justifyContent: 'center', alignItems: 'center',
-                      padding: '3px 0',
-                      position: 'relative',
-                      ...style,
-                    }}
-                  >
-                    <span style={{
-                      fontSize: '0.8rem', fontWeight: 700,
-                      color: isSelected ? '#fff' : cell.disabled ? '#aaa' : cell.isWeekend ? (cells.indexOf(cell) % 7 === 0 ? SECONDARY : PRIMARY) : '#1a1a1a',
-                      textDecoration: cell.disabled ? 'line-through' : 'none',
-                    }}>
-                      {cell.day}
-                    </span>
-                    {!cell.disabled && (
-                      <>
-                        <span style={{ fontSize: '0.62rem', fontWeight: 700, color: isSelected ? 'rgba(255,255,255,0.85)' : '#717171', marginTop: '1px', letterSpacing: '-0.3px' }}>
-                          {cell.price / 10000}만
-                        </span>
-                        {cell.stock !== undefined && (
-                          <span style={{ fontSize: '0.58rem', fontWeight: 800, color: isSelected ? 'rgba(255,255,255,0.75)' : '#005ce6', marginTop: '1px' }}>
-                            {cell.stock}개 남음
-                          </span>
-                        )}
-                      </>
-                    )}
-                    {cell.disabled && (
-                      <span style={{ fontSize: '0.48rem', fontWeight: 800, color: SECONDARY, marginTop: '1px' }}>예약마감</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Guest & Room Picker */}
-          <div style={{
-            display: 'flex', flexDirection: 'column', gap: '12px',
-            background: '#f0f2f5', borderRadius: '12px',
-            padding: '0.85rem 1rem',
-            marginBottom: '0.8rem',
-            border: '1px solid #ddd',
-          }}>
-            {/* Adults */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1a1a1a' }}>투숙객</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => setAdultCount(c => Math.max(1, c - 1))}
-                  disabled={adultCount <= 1}
-                  style={{
-                    width: '26px', height: '26px', borderRadius: '50%',
-                    border: adultCount <= 1 ? '1.5px solid #ddd' : `1.5px solid ${PRIMARY}`,
-                    color: adultCount <= 1 ? '#ddd' : PRIMARY,
-                    background: '#fff', cursor: adultCount <= 1 ? 'not-allowed' : 'pointer',
-                    fontSize: '0.85rem', fontWeight: 800,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >−</button>
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1a1a1a', minWidth: '14px', textAlign: 'center' }}>{adultCount}</span>
-                <button
-                  type="button"
-                  onClick={() => setAdultCount(c => Math.min(10, c + 1))}
-                  style={{
-                    width: '26px', height: '26px', borderRadius: '50%',
-                    border: `1.5px solid ${PRIMARY}`, color: PRIMARY,
-                    background: '#fff', cursor: 'pointer',
-                    fontSize: '0.85rem', fontWeight: 800,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >+</button>
-              </div>
-            </div>
-
-            {/* Rooms */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '8px' }}>
-              <div>
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1a1a1a' }}>객실 수</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => setRoomCount(c => Math.max(1, c - 1))}
-                  disabled={roomCount <= 1}
-                  style={{
-                    width: '26px', height: '26px', borderRadius: '50%',
-                    border: roomCount <= 1 ? '1.5px solid #ddd' : `1.5px solid ${PRIMARY}`,
-                    color: roomCount <= 1 ? '#ddd' : PRIMARY,
-                    background: '#fff', cursor: roomCount <= 1 ? 'not-allowed' : 'pointer',
-                    fontSize: '0.85rem', fontWeight: 800,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >−</button>
-                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1a1a1a', minWidth: '14px', textAlign: 'center' }}>{roomCount}</span>
-                <button
-                  type="button"
-                  onClick={() => setRoomCount(c => Math.min(10, c + 1))}
-                  style={{
-                    width: '26px', height: '26px', borderRadius: '50%',
-                    border: `1.5px solid ${PRIMARY}`, color: PRIMARY,
-                    background: '#fff', cursor: 'pointer',
-                    fontSize: '0.85rem', fontWeight: 800,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >+</button>
-              </div>
-            </div>
-
-            <p style={{ fontSize: '0.7rem', color: '#717171', marginTop: '2px' }}>
-              총 객실 {roomCount}개 · 성인 {adultCount}명 기준
-            </p>
-          </div>
-
-        </div>
-
-        {/* ── Fixed Footer ── */}
-        <div style={{ flexShrink: 0, borderTop: '1px solid #ddd', paddingTop: '0.8rem' }}>
-          {/* Billing Box */}
-          <div style={{
-            background: '#f0f2f5', borderRadius: '12px',
-            padding: '0.9rem 1.1rem', marginBottom: '0.8rem',
-            border: '1px solid #ddd',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#4a4a4a', marginBottom: '0.35rem' }}>
-              <span>객실 이용료 ({isRangeSelected ? `${nights}박 × 객실 ${roomCount}개` : '선택 대기'})</span>
-              <span style={{ fontWeight: 700, color: '#1a1a1a' }}>{isRangeSelected ? `₩${finalTotal.toLocaleString('ko-KR')}` : '₩ -'}</span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#717171', marginBottom: '0.35rem', paddingLeft: '0.4rem' }}>
-              {buildBillingDesc()}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '0.55rem', fontWeight: 800, fontSize: '1.05rem', color: '#1a1a1a' }}>
-              <span>최종 결제 합계</span>
-              <span style={{ color: SECONDARY, fontSize: '1.22rem', fontFamily: 'GmarketSansBold, Pretendard, sans-serif' }}>
-                {isRangeSelected ? `₩${finalTotal.toLocaleString('ko-KR')}` : '₩ -'}
-              </span>
-            </div>
-          </div>
-
-          {/* CTA Button */}
-          <button
-            onClick={handleBook}
-            disabled={booking}
-            style={{
-              width: '100%', padding: '0.75rem',
-              background: `linear-gradient(135deg, ${SECONDARY} 0%, #e0484d 100%)`,
-              color: '#fff', border: 'none', borderRadius: '12px',
-              fontSize: '0.9rem', fontWeight: 800, cursor: booking ? 'wait' : 'pointer',
-              opacity: booking ? 0.7 : 1,
-              boxShadow: '0 4px 12px rgba(255,90,95,0.28)',
-              letterSpacing: '-0.2px',
+          <StayDetailCalendar
+            calYear={calYear}
+            calMonth={calMonth}
+            cells={cells}
+            checkIn={checkIn}
+            checkOut={checkOut}
+            onPrevMonth={() => {
+              if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+              else setCalMonth(m => m - 1);
             }}
-          >
-            {booking ? '예약 처리 중...' : '숙소 예약하기'}
-          </button>
+            onNextMonth={() => {
+              if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+              else setCalMonth(m => m + 1);
+            }}
+            onCellClick={handleCellClick}
+          />
+
+          <StayDetailGuestPicker
+            adultCount={adultCount}
+            roomCount={roomCount}
+            onAdultChange={setAdultCount}
+            onRoomChange={setRoomCount}
+          />
         </div>
+
+        <StayDetailFooter
+          isRangeSelected={isRangeSelected}
+          nights={nights}
+          roomCount={roomCount}
+          finalTotal={finalTotal}
+          billingDesc={buildBillingDesc()}
+          booking={booking}
+          onBook={handleBook}
+        />
       </div>
 
       <style>{`

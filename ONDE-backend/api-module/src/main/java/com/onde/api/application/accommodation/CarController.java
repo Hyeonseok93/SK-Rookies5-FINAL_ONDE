@@ -4,7 +4,6 @@ import com.onde.api.application.accommodation.dto.CarReservationRequest;
 import com.onde.api.application.accommodation.dto.CarReservationResponse;
 import com.onde.api.application.accommodation.dto.CarSearchRequest;
 import com.onde.api.application.accommodation.dto.CarSearchResponse;
-import com.onde.core.repository.CarRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +27,6 @@ public class CarController {
 
     private final CarService carService;
     private final ReservationService reservationService;
-    private final CarRepository carRepository;
 
     // 렌터카 목록 및 검색
     @GetMapping({"", "/search"})
@@ -42,9 +40,7 @@ public class CarController {
             @LoginMember Long memberId,
             @Valid @RequestBody CarReservationRequest request) {
         Reservation reservation = reservationService.reserveCar(memberId, request);
-        String modelName = carRepository.findById(request.getCarId())
-                .map(com.onde.core.entity.accommodation.Car::getModelName)
-                .orElse(null);
+        String modelName = carService.findModelNameById(request.getCarId());
         CarReservationResponse response = new CarReservationResponse(
                 reservation.getId(),
                 reservation.getTargetType(),

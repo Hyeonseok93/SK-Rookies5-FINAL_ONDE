@@ -1,9 +1,20 @@
 package com.onde.core.repository;
 
 import com.onde.core.entity.insurance.InsurancePolicy;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 public interface InsurancePolicyRepository extends JpaRepository<InsurancePolicy, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from InsurancePolicy p where p.id = :id")
+    Optional<InsurancePolicy> findByIdForUpdate(@Param("id") Long id);
+
     org.springframework.data.domain.Page<InsurancePolicy> findByUserId(Long userId, org.springframework.data.domain.Pageable pageable);
 
     org.springframework.data.domain.Page<InsurancePolicy> findByUserIdAndStatus(Long userId, com.onde.core.entity.insurance.InsurancePolicyStatus status, org.springframework.data.domain.Pageable pageable);

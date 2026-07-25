@@ -43,13 +43,21 @@ onde:
     local-origins:
       - http://localhost:5173
       - http://localhost:3000
+  s3:
+    allow-mock-fallback: false
 
 ---
 spring:
   config:
     activate:
       on-profile: local | dev
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 
 onde:
   cors:
     allow-localhost: true
+  s3:
+    allow-mock-fallback: true

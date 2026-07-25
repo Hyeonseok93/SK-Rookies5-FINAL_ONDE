@@ -3,7 +3,7 @@ package com.onde.api.application.community;
 import com.onde.api.application.community.dto.PostCreateRequest;
 import com.onde.api.application.community.dto.PostCreateResponse;
 import com.onde.api.application.community.dto.PostDeleteResponse;
-import com.onde.api.config.MockS3Uploader;
+import com.onde.api.config.S3Uploader;
 import com.onde.core.entity.community.Post;
 import com.onde.core.entity.community.PostStatus;
 import com.onde.core.entity.community.PostType;
@@ -44,7 +44,7 @@ class PostServiceTest {
     private MemberRepository memberRepository;
 
     @Mock
-    private MockS3Uploader s3Uploader;
+    private S3Uploader s3Uploader;
 
     @Spy
     private Executor imageUploadExecutor = ForkJoinPool.commonPool(); // 테스트 환경용 비동기 스레드 풀 연동

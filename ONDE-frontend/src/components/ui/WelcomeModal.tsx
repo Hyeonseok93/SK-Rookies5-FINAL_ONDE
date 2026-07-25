@@ -3,10 +3,8 @@ import { useTravelStore } from '@/store/useTravelStore';
 import welcomeImg from '@/assets/welcome.png';
 
 export const WelcomeModal: React.FC = () => {
-  const { 
-    isWelcomePopupOpen, 
-    closeWelcomePopup, 
-  } = useTravelStore();
+  const isWelcomePopupOpen = useTravelStore((s) => s.isWelcomePopupOpen);
+  const closeWelcomePopup = useTravelStore((s) => s.closeWelcomePopup);
 
   // Handle ESC key press
   React.useEffect(() => {

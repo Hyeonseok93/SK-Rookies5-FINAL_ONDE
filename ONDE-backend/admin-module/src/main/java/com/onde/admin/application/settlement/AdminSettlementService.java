@@ -1,5 +1,7 @@
 package com.onde.admin.application.settlement;
 
+import com.onde.admin.application.settlement.dto.AdminSettlementDetailResponse;
+import com.onde.admin.application.settlement.dto.AdminSettlementRevealResponse;
 import com.onde.core.entity.settlement.SellerAccount;
 import com.onde.core.entity.settlement.Settlement;
 import com.onde.core.entity.settlement.SettlementStatus;
@@ -7,12 +9,20 @@ import com.onde.core.entity.payment.Payment;
 import com.onde.core.repository.PaymentRepository;
 import com.onde.core.repository.SellerAccountRepository;
 import com.onde.core.repository.SettlementRepository;
+import com.onde.core.security.PersonalDataMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,6 +40,81 @@ public class AdminSettlementService {
     public SellerAccount getAccount(Long sellerId) {
         return sellerAccountRepository.findByMemberId(sellerId)
                 .orElseThrow(() -> new IllegalArgumentException("등록된 계좌 없음"));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getSettlements(SettlementStatus status, int page, int size) {
+        Page<Settlement> result;
+        if (status != null) {
+            result = settlementRepository.findByStatus(status, PageRequest.of(page, size));
+        } else {
+            result = settlementRepository.findAll(PageRequest.of(page, size));
+        }
+
+        List<Map<String, Object>> settlementList = new ArrayList<>();
+        for (Settlement s : result.getContent()) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", s.getId());
+            map.put("settlementId", PersonalDataMasker.maskNumericId(s.getId()));
+            map.put("settlementMonth", s.getSettlementDate().toString());
+            map.put("grossAmount", s.getGrossAmount());
+            map.put("commission", s.getCommission());
+            map.put("netAmount", s.getNetAmount());
+            map.put("status", s.getStatus());
+            map.put("sellerId", s.getSellerId());
+
+            SellerAccount account = getAccount(s.getSellerId());
+            map.put("sellerName", PersonalDataMasker.maskName(account.getAccountHolder()));
+            map.put("bankName", PersonalDataMasker.maskBankName(account.getBankName()));
+            map.put("accountNumber", PersonalDataMasker.maskAccountNumber(account.getAccountNumber()));
+
+            settlementList.add(map);
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("settlements", settlementList);
+        data.put("totalCount", result.getTotalElements());
+        return data;
+    }
+
+    @Transactional(readOnly = true)
+    public AdminSettlementRevealResponse revealSettlement(Long settlementId) {
+        Settlement settlement = settlementRepository.findById(settlementId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 정산 건이 존재하지 않습니다."));
+
+        SellerAccount account = getAccount(settlement.getSellerId());
+        return AdminSettlementRevealResponse.builder()
+                .settlementId(settlement.getId())
+                .sellerName(account.getAccountHolder())
+                .bankName(account.getBankName())
+                .accountNumber(account.getAccountNumber())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public AdminSettlementDetailResponse getSettlementDetailResponse(Long settlementId) {
+        Settlement settlement = settlementRepository.findById(settlementId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 정산 건이 존재하지 않습니다."));
+
+        List<PaymentRepository.SettlementDetailProjection> projections =
+                paymentRepository.findSettlementDetails(settlementId);
+
+        List<AdminSettlementDetailResponse.DetailItem> items = projections.stream()
+                .map(p -> AdminSettlementDetailResponse.DetailItem.builder()
+                        .paymentId(p.getPaymentId())
+                        .reservationId(p.getReservationId())
+                        .targetType(p.getTargetType())
+                        .productName(p.getProductName())
+                        .amount(p.getAmount())
+                        .paymentDate(p.getPaymentDate())
+                        .build())
+                .collect(Collectors.toList());
+
+        return AdminSettlementDetailResponse.builder()
+                .settlementId(PersonalDataMasker.maskNumericId(settlement.getId()))
+                .settlementDate(settlement.getSettlementDate())
+                .details(items)
+                .build();
     }
 
     /**

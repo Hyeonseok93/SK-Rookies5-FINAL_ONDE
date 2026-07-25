@@ -17,7 +17,6 @@ import com.onde.api.application.accommodation.dto.IntegratedReportRequest;
 import com.onde.api.application.accommodation.dto.ReportTemplateType;
 import com.onde.api.application.member.MemberMyPageService;
 import com.onde.api.application.member.dto.MyPageResponseDtos.*;
-import com.onde.core.repository.MemberRepository;
 import jakarta.validation.Valid;
 import com.onde.api.security.LoginMember;
 import org.springframework.http.HttpHeaders;
@@ -37,7 +36,6 @@ import java.io.ByteArrayOutputStream;
 public class IntegratedReportController {
 
     private final MemberMyPageService memberMyPageService;
-    private final MemberRepository memberRepository;
 
     @PostMapping("/api/v1/report/integrated")
     public ResponseEntity<byte[]> generateIntegratedReport(
@@ -104,14 +102,7 @@ public class IntegratedReportController {
                     .setMarginBottom(15f));
 
             // JWT 인증 사용자 본인 데이터만 리포트에 포함 (요청 body memberId는 사용하지 않음)
-            String customerEmail = "N/A";
-            try {
-                customerEmail = memberRepository.findById(memberId)
-                        .map(member -> member.getEmail() != null ? member.getEmail() : "N/A")
-                        .orElse("N/A");
-            } catch (Exception e) {
-                // Ignore
-            }
+            String customerEmail = memberMyPageService.findEmailByIdOrDefault(memberId, "N/A");
 
             // 메타데이터 테이블 (발행일, 이메일, 그리고 비즈니스용인 경우 발급 번호 출력)
             Table metaTable;

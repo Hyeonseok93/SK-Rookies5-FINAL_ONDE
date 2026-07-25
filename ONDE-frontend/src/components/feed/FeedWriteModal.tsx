@@ -16,7 +16,7 @@ interface FeedWriteModalProps {
 }
 
 export const FeedWriteModal: React.FC<FeedWriteModalProps> = ({ isOpen, onClose, onSubmit }) => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [newCategory, setNewCategory] = useState<'STAY' | 'FOOD' | 'PHOTO' | 'TIP'>('PHOTO');

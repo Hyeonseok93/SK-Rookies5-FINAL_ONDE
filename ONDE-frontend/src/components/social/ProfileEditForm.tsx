@@ -11,7 +11,7 @@ interface ProfileEditFormProps {
 }
 
 export const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ onCancel }) => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const { revealField } = useMemberProfileReveal();
 
   const [maskedEmail, setMaskedEmail] = useState('');

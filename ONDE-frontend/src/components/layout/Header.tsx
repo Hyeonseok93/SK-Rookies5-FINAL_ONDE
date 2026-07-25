@@ -10,14 +10,12 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const {
-    isLoggedIn,
-    username,
-    name,
-    nickname,
-    addToast,
-    openAuthModal,
-  } = useTravelStore();
+  const isLoggedIn = useTravelStore((s) => s.isLoggedIn);
+  const username = useTravelStore((s) => s.username);
+  const name = useTravelStore((s) => s.name);
+  const nickname = useTravelStore((s) => s.nickname);
+  const addToast = useTravelStore((s) => s.addToast);
+  const openAuthModal = useTravelStore((s) => s.openAuthModal);
 
   const { revealField } = useMemberProfileReveal();
 

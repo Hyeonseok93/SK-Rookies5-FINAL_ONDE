@@ -21,7 +21,7 @@ const STAY_LOCATION_OPTIONS = TRAVEL_DESTINATIONS.flatMap((c) =>
 ).sort((a, b) => a.label.localeCompare(b.label, 'ko'));
 
 export const SellerStayPanel: React.FC = () => {
-  const { addToast } = useTravelStore();
+  const addToast = useTravelStore((s) => s.addToast);
   const [stays, setStays] = useState<SellerPropertyDto[]>([]);
   const [selectedPropertyKey, setSelectedPropertyKey] = useState('');
   const [yearMonth, setYearMonth] = useState(getDefaultYearMonthValue);
