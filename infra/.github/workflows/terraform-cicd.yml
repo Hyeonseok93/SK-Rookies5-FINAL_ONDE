@@ -1,0 +1,87 @@
+name: "Terraform Infrastructure CI/CD"
+#terraform 코드 수정시에만 작동
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/terraform-cicd.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+
+jobs:
+  terraform:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ap-northeast-2
+      # variables.tf의 sensitive 변수로 자동 주입
+      TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Secrets Manager에 백엔드 시크릿 생성/업데이트
+      #    DB_HOST, DB_PASSWORD, REDIS_HOST → onde-project/backend
+      - name: Create or Update AWS Secrets Manager Secret
+        working-directory: .
+        run: |
+          SECRET_STRING=$(cat <<EOF
+          {
+            "DB_HOST": "${{ secrets.DB_HOST }}",
+            "DB_PASSWORD": "${{ secrets.DB_PASSWORD }}",
+            "REDIS_HOST": "${{ secrets.REDIS_HOST }}"
+          }
+          EOF
+          )
+          if aws secretsmanager describe-secret \
+               --secret-id onde-project/backend > /dev/null 2>&1; then
+            aws secretsmanager update-secret \
+              --secret-id onde-project/backend \
+              --secret-string "$SECRET_STRING"
+            echo "✅ Secret updated: onde-project/backend"
+          else
+            aws secretsmanager create-secret \
+              --name onde-project/backend \
+              --description "Backend EC2 application secrets" \
+              --secret-string "$SECRET_STRING"
+            echo "✅ Secret created: onde-project/backend"
+          fi
+
+      # 3. Terraform 설치
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # 4. 초기화
+      - name: Terraform Init
+        run: terraform init
+
+      # 5. 포맷 검사 (경고만)
+      - name: Terraform Format
+        run: terraform fmt -check
+        continue-on-error: true
+
+      # 6. 문법/변수 오류 검사
+      - name: Terraform Validate
+        run: terraform validate
+
+      # 7. 실행 계획
+      - name: Terraform Plan
+        run: terraform plan -no-color -out=tfplan
+
+      # 8. main 브랜치 push 시에만 실제 반영
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve tfplan
