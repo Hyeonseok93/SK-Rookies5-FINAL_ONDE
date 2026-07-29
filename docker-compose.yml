@@ -25,8 +25,9 @@ services:
 
   redis:
     image: redis:7.2-alpine
+    command: ["redis-server", "--requirepass", "onde-local-redis"]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "onde-local-redis", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -41,6 +42,7 @@ services:
     environment:
       DB_URL: jdbc:mariadb://mariadb:3306/onde
       REDIS_HOST: redis
+      REDIS_PASSWORD: onde-local-redis
       AWS_S3_ENDPOINT: http://minio:9000
     ports:
       - "8080:8080"
@@ -68,6 +70,7 @@ services:
     environment:
       DB_URL: jdbc:mariadb://mariadb:3306/onde
       REDIS_HOST: redis
+      REDIS_PASSWORD: onde-local-redis
       AWS_S3_ENDPOINT: http://minio:9000
     ports:
       - "8081:8081"
