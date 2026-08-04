@@ -2,9 +2,13 @@
 
 ## 💻 Developers
 
+<div align="center">
+
 | <a href="https://github.com/nirey-l" target="_blank"><img width="120" height="120" src="https://github.com/nirey-l.png" /></a> | <a href="https://github.com/Eojinn" target="_blank"><img width="120" height="120" src="https://github.com/Eojinn.png" /></a> | <a href="https://github.com/Hyeonseok93" target="_blank"><img width="120" height="120" src="https://github.com/Hyeonseok93.png" /></a> | <a href="https://github.com/pjcosmos" target="_blank"><img width="120" height="120" src="https://github.com/pjcosmos.png" /></a> | <a href="https://github.com/yoojisoo99" target="_blank"><img width="120" height="120" src="https://github.com/yoojisoo99.png" /></a> | <a href="https://github.com/JangSeonguk1011" target="_blank"><img width="120" height="120" src="https://github.com/JangSeonguk1011.png" /></a> | <a href="https://github.com/hongjiho5148" target="_blank"><img width="120" height="120" src="https://github.com/hongjiho5148.png" /></a> |
 | :----------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------: |
 |                                           [이예린(팀장)](https://github.com/nirey-l)                                           |                                             [김어진](https://github.com/Eojinn)                                              |                                                [김현석](https://github.com/Hyeonseok93)                                                |                                              [박진아](https://github.com/pjcosmos)                                               |                                               [유지수](https://github.com/yoojisoo99)                                                |                                                  [장성욱](https://github.com/JangSeonguk1011)                                                  |                                                  [홍지호](https://github.com/hongjiho5148)                                                  |
+
+</div>
 
 ---
 
@@ -408,12 +412,36 @@ VITE_ADMIN_API_BASE=http://localhost:8081
 docker compose up --build
 ```
 
-| 서비스 | URL |
-|--------|-----|
-| Frontend | http://localhost:5173 |
-| API | http://localhost:8080 |
-| Admin API | http://localhost:8081 |
-| MinIO API / Console | http://localhost:9000 · http://localhost:9001 |
+<div align="center">
+
+<table align="center">
+  <thead>
+    <tr>
+      <th align="left">서비스</th>
+      <th align="left">URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="left">Frontend</td>
+      <td align="left">http://localhost:5173</td>
+    </tr>
+    <tr>
+      <td align="left">API</td>
+      <td align="left">http://localhost:8080</td>
+    </tr>
+    <tr>
+      <td align="left">Admin API</td>
+      <td align="left">http://localhost:8081</td>
+    </tr>
+    <tr>
+      <td align="left">MinIO API / Console</td>
+      <td align="left">http://localhost:9000 · http://localhost:9001</td>
+    </tr>
+  </tbody>
+</table>
+
+</div>
 
 로컬 이미지 버킷은 `S3_Mock/onde-local` 입니다. MinIO 공개 정책이 필요하면 `set_bucket_policy.py`를 참고합니다.
 
